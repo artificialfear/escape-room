@@ -144,7 +144,7 @@
             <a class="btn small" href="soundboard.html" target="_blank">Soundboard</a>
             <button class="btn small" id="newgame">New game (fresh puzzles)</button>
           </div>
-          <div class="testbox"><div class="qr">${qrSVG(scanUrl(TEST_CODE, room), 3)}</div><div>Systems check: on your phone, tap <b>Test camera</b> and scan this code, <b>Test microphone</b> and hum, and <b>Test TV sound</b>. These checks reveal nothing about the game.</div></div>
+          <div class="testbox"><div>Systems check: on each phone, tap <b>Test camera</b> and point it at one of the printed pages, <b>Test microphone</b> and hum, and <b>Test TV sound</b>. These checks reveal nothing about the game.</div></div>
           <div class="note-sm">When you’re both joined and ready, tap <b>We’re ready</b> on your phones.</div>
         </div>
         <div style="text-align:center">

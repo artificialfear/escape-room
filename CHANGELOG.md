@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5 — 2026-11-15
+- Removed the test QR code from the TV's join screen. The phone's Test camera now checks against any printed page, without registering it or revealing anything.
+
 ## 1.4 — 2026-11-15
 - Every QR code (the systems-check code and the printed pages) is now a link to the game. Scanning with the phone's normal camera app opens the game and registers the scan; the in-game Scan button still works too.
 - If a scan opens a second tab, the old tab steps aside (“Opened in another tab”) instead of the two fighting over the connection.

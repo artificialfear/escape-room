@@ -163,6 +163,7 @@
         h = `<div class="title">Welcome, ${v.name}</div>
           <p class="prompt">Before you begin, test everything. None of these tests reveal anything about the game.</p>
           <button class="btn big ghost" id="tcam">Test camera</button>
+          <p class="center muted" style="font-size:.85em;margin:-.3em 0 .6em">Point it at any printed page — the test won’t reveal anything.</p>
           <button class="btn big ghost" id="tmic">Test microphone</button>
           <div id="micout" class="center muted"></div>
           <button class="btn big ghost" id="tsnd">Test TV sound</button>
@@ -235,7 +236,7 @@
     on('ready', () => send({ t: 'ready', on: !w.ready }));
     on('switch', () => { localStorage.removeItem('lr-role-' + room); location.reload(); });
     on('tsnd', () => { send({ t: 'testsound' }); toast('Listen for a chime from the TV.', true); });
-    on('tcam', () => openScanner((c) => toast(c === TEST_CODE ? 'Camera works! ✓' : 'Scanned a code — camera works! ✓', true)));
+    on('tcam', () => openScanner((c) => toast('Camera works! ✓', true)));
     on('tmic', async () => {
       const out = $('#micout');
       if (singing) { stopSing(); out.textContent = ''; return; }
