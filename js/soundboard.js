@@ -36,6 +36,7 @@
       <div class="desc">${slot.desc}</div>
       <div class="ctrl">
         <button class="b gold" data-play>▶ Play</button>
+        <button class="b" data-seam style="display:none" title="Starts 8 seconds before the loop point so you can hear the jump back">⟲ Test loop</button>
         <button class="b" data-stop>■ Stop</button>
         <button class="b" data-pick>Choose file…</button>
         <button class="b red" data-del>Remove my file</button>
@@ -44,6 +45,7 @@
       </div></div>`;
   }
 
+  const fmt = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
   function refresh(slot) {
     const row = $('#row-' + slot.id), e = AB.bank[slot.id];
     const chip = $('[data-chip]', row);
@@ -54,6 +56,9 @@
     else chip.textContent = BUILTIN[slot.id].text;
     chip.title = chip.textContent;
     $('[data-del]', row).style.display = e && e.src === 'local' ? '' : 'none';
+    const lp = AB.loopFor(slot.id);
+    $('[data-seam]', row).style.display = lp ? '' : 'none';
+    if (lp) chip.textContent += ` · loops ${fmt(lp.start)}–${fmt(lp.end)}`;
     const v = AB.slotVol(slot.id);
     $('[data-vol]', row).value = v; $('[data-volv]', row).textContent = Math.round(v * 100) + '%';
   }
@@ -82,6 +87,7 @@
         } else if (BUILTIN[slot.id].play) BUILTIN[slot.id].play();
       };
       $('[data-stop]', row).onclick = stopAll;
+      $('[data-seam]', row).onclick = () => { Sound.ensure(); stopAll(); const lp = AB.loopFor(slot.id); AB.setDuck(1); AB.music(slot.id, { offset: lp.end - 8, restart: true }); };
       const input = $('[data-file]', row);
       $('[data-pick]', row).onclick = () => input.click();
       input.onchange = () => setFile(slot, input.files[0]).then(() => (input.value = ''));
@@ -103,6 +109,11 @@
     mm.oninput = () => { AB.settings.music = +mm.value; AB.saveSettings(); AB.setDuck(1); AB.announce({ t: 'settings' }); };
     ms.oninput = () => { AB.settings.sfx = +ms.value; AB.saveSettings(); AB.announce({ t: 'settings' }); };
     $('#stopall').onclick = stopAll;
+    $('#clearlocal').onclick = async () => {
+      if (!confirm('Remove every file you added on this page, so the game uses the repo’s sounds folder instead?')) return;
+      stopAll();
+      for (const slot of AB.SLOTS) { if (AB.bank[slot.id] && AB.bank[slot.id].src === 'local') { await AB.delLocal(slot.id); await AB.loadSlot(slot); refresh(slot); AB.announce({ t: 'slot', id: slot.id }); } }
+    };
   }
   // stop the browser from opening a file dropped outside a slot
   window.addEventListener('dragover', (e) => e.preventDefault());

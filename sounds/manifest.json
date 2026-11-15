@@ -1,1 +1,21 @@
-[]
+[
+ "music_act1.mp3",
+ "music_act2.mp3",
+ "music_act3.mp3",
+ "music_ending.mp3",
+ "music_hiding.mp3",
+ "music_title.mp3",
+ "sfx_climax.mp3",
+ "sfx_heartbeat.mp3",
+ "sfx_hint.mp3",
+ "sfx_house1.mp3",
+ "sfx_house2.mp3",
+ "sfx_house3.mp3",
+ "sfx_page.mp3",
+ "sfx_progress.mp3",
+ "sfx_reset.mp3",
+ "sfx_solve.mp3",
+ "sfx_test.mp3",
+ "sfx_transition.mp3",
+ "sfx_wrong.mp3"
+]

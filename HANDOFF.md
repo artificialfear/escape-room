@@ -14,6 +14,11 @@ A static GitHub Pages app. `index.html` is the TV/host and runs the game. `play.
 - `js/audiobank.js` holds the slot list. Files are loaded from IndexedDB first (added on `soundboard.html`), then from the repo's `sounds/<slot>.<ext>` (found through the GitHub contents API on github.io, or `sounds/manifest.json` as a fallback). The soundboard announces changes over the BroadcastChannel `lr-soundboard`, and the TV reloads them live.
 - `tv.js` `applyMusic()` maps phases to music slots and ducks the music in the listening phases. The randomized musical sounds (music box tune, ghost hum, phone keys) are always synthesized.
 
+## Mat's audio (v1.2)
+- All 19 slots have files in `sounds/`, built by `tools/process_audio.py` from Mat's uploads. That script trims silence (−45 dB relative to peak), sets loudness targets (music −18 LUFS; title −20; ending −16; SFX −15 to −27 by role), soft-limits peaks to −1 dBTP, and encodes LAME VBR q2.
+- Loop points are in `sounds/loops.json`, in seconds within the processed file. The files are cut at the loop end, and the 0.45–1.5 s before the loop end is pre-blended with the audio just before the loop start (an equal-power crossfade baked into the file). Candidates were found with `tools/find_loops.py` (feature similarity plus onset alignment) and checked visually on spectrograms. Chrome decodes these files sample-exactly, offset 0 compared with ffmpeg.
+- The fizzle (sfx_reset) was a 4 s sustained sound, shortened to 1.4 s with a fade-out. The climax sting's 5.6 s silent tail was removed. The TV test sound's long tail was trimmed.
+
 ## Testing
 `python3 tests/playthrough.py` plays the whole game with the TV and both phones in Playwright, using a fake PeerJS built on BroadcastChannel (`tests/fakepeer.js`). `tests/soundboard_test.py` covers the soundboard. Screenshots go to `tests/shots/`, which git ignores.
 

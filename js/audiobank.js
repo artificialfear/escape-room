@@ -79,6 +79,7 @@
   const bank = {}; // id -> { src: 'local'|'repo', url, name, buffer }
   let ready = false; const readyFns = [];
   async function loadSlot(slot) {
+    if (cur && cur.id === slot.id) stopMusic(0.3);
     if (bank[slot.id] && bank[slot.id].src === 'local') URL.revokeObjectURL(bank[slot.id].url);
     delete bank[slot.id];
     let entry = null;
@@ -93,6 +94,7 @@
     return entry;
   }
   async function loadAll() {
+    try { const r = await fetch('sounds/loops.json', { cache: 'no-cache' }); if (r.ok) loopInfo = await r.json(); } catch (e) {}
     await Promise.all(SLOTS.map(loadSlot));
     ready = true; readyFns.splice(0).forEach((f) => f());
   }
@@ -108,33 +110,50 @@
     src.connect(g); g.connect(Sound.master()); src.start();
     return src;
   }
-  let cur = null; // { id, el, gain }
+  // Music plays from decoded buffers so loop points (sounds/loops.json) are sample-accurate and gapless.
+  let loopInfo = {};
+  let cur = null; // { id, src, gain, token }
   let duckLevel = 1;
   function musicLevel(id) { return settings.music * slotVol(id) * duckLevel; }
-  function music(id) {
-    if (cur && cur.id === id) { setDuck(duckLevel); return true; }
-    stopMusic(1.5);
+  function loopFor(id) { const e = bank[id]; return e && e.src === 'repo' ? loopInfo[id] || null : null; }
+  function decodeMusic(id) {
+    const e = bank[id];
+    if (!e.bufP) e.bufP = fetch(e.url).then((r) => r.arrayBuffer()).then((ab) => Sound.ctx().decodeAudioData(ab));
+    return e.bufP;
+  }
+  async function music(id, opts = {}) {
+    if (cur && cur.id === id && !opts.restart) { setDuck(duckLevel); return true; }
+    stopMusic(opts.restart ? 0.2 : 1.5);
     const e = bank[id]; if (!e || e.error) return false;
-    const c = Sound.ctx();
-    const el = new Audio(e.url); el.loop = SLOTS.find((s) => s.id === id).loop; el.crossOrigin = 'anonymous';
-    const src = c.createMediaElementSource(el);
+    const token = {}; cur = { id, token };
+    let buf;
+    try { buf = await decodeMusic(id); } catch (err) { console.warn('Could not decode', id, err); e.error = 'Could not read this file'; if (cur && cur.token === token) cur = null; return false; }
+    if (!cur || cur.token !== token) return false; // something else started meanwhile
+    // free memory held by tracks that aren't playing
+    SLOTS.forEach((s) => { if (s.kind === 'music' && s.id !== id && bank[s.id]) delete bank[s.id].bufP; });
+    const c = Sound.ctx(), slot = SLOTS.find((s) => s.id === id), lp = loopFor(id);
+    const src = c.createBufferSource(); src.buffer = buf;
+    if (slot.loop) { src.loop = true; if (lp) { src.loopStart = Math.min(lp.start, buf.duration); src.loopEnd = Math.min(lp.end, buf.duration); } }
     const g = c.createGain(); g.gain.value = 0.0001;
     src.connect(g); g.connect(Sound.master());
-    el.play().catch((err) => console.warn('music play blocked', err));
-    g.gain.setTargetAtTime(Math.max(0.0001, musicLevel(id)), c.currentTime, 0.6);
-    cur = { id, el, gain: g };
+    src.start(0, Math.max(0, Math.min(opts.offset || 0, buf.duration - 0.1)));
+    g.gain.setTargetAtTime(Math.max(0.0001, musicLevel(id)), c.currentTime, opts.offset ? 0.05 : 0.6);
+    cur = { id, src, gain: g, token };
+    src.onended = () => { if (cur && cur.src === src) cur = null; };
     return true;
   }
   function stopMusic(fade = 1.5) {
     if (!cur) return;
-    const { el, gain } = cur; const c = Sound.ctx(); cur = null;
+    const { src, gain } = cur; cur = null;
+    if (!src) return;
+    const c = Sound.ctx();
     gain.gain.cancelScheduledValues(c.currentTime);
     gain.gain.setTargetAtTime(0.0001, c.currentTime, fade / 3);
-    setTimeout(() => { el.pause(); el.src = ''; }, fade * 1000 + 200);
+    setTimeout(() => { try { src.stop(); } catch (e) {} }, fade * 1000 + 200);
   }
   function setDuck(level) {
     duckLevel = level;
-    if (cur) { const c = Sound.ctx(); cur.gain.gain.cancelScheduledValues(c.currentTime); cur.gain.gain.setTargetAtTime(Math.max(0.0001, musicLevel(cur.id)), c.currentTime, 0.5); }
+    if (cur && cur.gain) { const c = Sound.ctx(); cur.gain.gain.cancelScheduledValues(c.currentTime); cur.gain.gain.setTargetAtTime(Math.max(0.0001, musicLevel(cur.id)), c.currentTime, 0.5); }
   }
   function playingId() { return cur ? cur.id : null; }
 
@@ -150,5 +169,5 @@
   } catch (e) {}
   function announce(msg) { try { chan && chan.postMessage(msg); } catch (e) {} }
 
-  window.AudioBank = { announce, SLOTS, settings, saveSettings, slotVol, loadAll, loadSlot, onReady, has, bank, sfx, music, stopMusic, setDuck, playingId, putLocal, delLocal };
+  window.AudioBank = { announce, loopFor, SLOTS, settings, saveSettings, slotVol, loadAll, loadSlot, onReady, has, bank, sfx, music, stopMusic, setDuck, playingId, putLocal, delLocal };
 })();
