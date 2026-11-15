@@ -1,8 +1,13 @@
 // Phone controller. Renders whatever "view" the TV sends to this player.
 (function () {
   const $ = (s) => document.querySelector(s);
+  const vib = (p) => { try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(p); } catch (e) {} };
   const params = new URLSearchParams(location.search);
-  const room = (params.get('r') || '').toUpperCase();
+  const room = (params.get('r') || localStorage.getItem('lr-last-room') || '').toUpperCase();
+  if (room) localStorage.setItem('lr-last-room', room);
+  // A page scanned with the phone's normal camera opens play.html?scan=CODE
+  let pendingScan = (params.get('scan') || '').toUpperCase();
+  if (pendingScan) { const u = new URL(location.href); u.searchParams.delete('scan'); u.searchParams.set('r', room); history.replaceState(null, '', u.href); }
   const PC = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
   const NUM = ['', 'I', 'II', 'III', 'IV'];
   let role = params.get('as') || localStorage.getItem('lr-role-' + room) || '';
@@ -15,7 +20,7 @@
   document.addEventListener('pointerdown', () => { Sound.ensure(); keepAwake(); }, { capture: true });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) keepAwake(); });
 
-  if (!room) { main.innerHTML = `<div class="panel center">Scan the QR code on the TV to join.</div>`; return; }
+  if (!room) { main.innerHTML = `<div class="panel center" style="margin-top:2em">Scan the big QR code on the TV first to join the game. After that, pages you scan will open right here.</div>`; return; }
 
   function pickRole() {
     $('#footer').classList.add('hidden');
@@ -29,10 +34,19 @@
     $('#who').textContent = role === 'mat' ? 'Mat' : 'Emily';
     main.innerHTML = `<div class="panel center muted" style="margin-top:2em">Connecting to the TV…</div>`;
     client = new Net.Client(room, {
-      onOpen() { client.send({ t: 'hello', role }); },
+      onOpen() {
+        client.send({ t: 'hello', role });
+        if (pendingScan) { const c = pendingScan; pendingScan = ''; setTimeout(() => handleScan(c), 400); }
+      },
       onStatus(ok, text) { const c = $('#conn'); c.classList.toggle('ok', ok); c.querySelector('span').textContent = ok ? 'TV' : text; },
       onMessage(m) {
         if (m.t === 'view') { view = m.view; render(); }
+        else if (m.t === 'replaced') {
+          client.stop();
+          $('#footer').classList.add('hidden');
+          main.innerHTML = `<div class="title center" style="margin-top:1em">Opened in another tab</div><div class="panel center prompt">The game is now running in another tab on this phone (this happens when you scan a page with the normal camera). Use that tab and close this one.</div><button class="btn big ghost" id="takeback">Use this tab instead</button>`;
+          $('#takeback').onclick = () => { lastKey = ''; main.innerHTML = ''; client.resume(); };
+        }
         else if (m.t === 'flash') flash(m);
         else if (m.t === 'prog') updateProg(m.p);
       },
@@ -54,7 +68,7 @@
     if (!p) return;
     pendingReveal = null;
     Sound.ensure(); [67, 71, 74, 79].forEach((m, i) => Sound.bell(m, i * 0.1, 1.6, 0.15));
-    if (navigator.vibrate) navigator.vibrate(200);
+    vib(200);
     openSheet('You found a torn page!', `<p class="center muted">A single note in Eleanor’s hand. Keep it safe — you’ll need it later. (Tap <b>Pages</b> any time to see it again.)</p>${pageCard(p)}<button class="btn big primary" id="pgok">Keep it</button>`);
     $('#pgok').onclick = closeSheet;
   }
@@ -99,7 +113,8 @@
         canvas.width = w; canvas.height = h; ctx.drawImage(video, 0, 0, w, h);
         const img = ctx.getImageData(0, 0, w, h);
         const code = jsQR(img.data, w, h, { inversionAttempts: 'dontInvert' });
-        if (code && code.data && /^LR-/.test(code.data)) { const c = code.data; closeScanner(); if (navigator.vibrate) navigator.vibrate(60); scanCb && scanCb(c); }
+        const c = code && code.data ? extractCode(code.data) : null;
+        if (c) { closeScanner(); vib(60); scanCb && scanCb(c); }
       };
       scanRaf = requestAnimationFrame(loop);
     } catch (e) {
@@ -112,7 +127,12 @@
     scanStream = null; $('#scanner').classList.add('hidden');
   }
   $('#scan-x').onclick = closeScanner;
-  $('#manualgo').onclick = () => { const v = $('#manual').value.trim(); if (!v) return; closeScanner(); scanCb && scanCb(v); };
+  $('#manualgo').onclick = () => { const v = $('#manual').value.trim().toUpperCase().replace(/^LR-/, ''); if (!v) return; closeScanner(); scanCb && scanCb(v); };
+  // one path for every scan: in-game scanner, typed code, or a link from the phone's camera
+  function handleScan(c) {
+    if (c === TEST_CODE) { toast('Camera works! ✓  (The game’s own Scan button works too.)', true); return; }
+    send({ t: 'scan', code: c });
+  }
 
   // ---------- render ----------
   function header(v) { return `<div class="act">${v.act || ''}</div>${v.title ? `<div class="title">${v.title}</div>` : ''}${v.prompt ? `<div class="prompt">${v.prompt}</div>` : ''}${v.info ? `<div class="info">${v.info}</div>` : ''}`; }
@@ -215,7 +235,7 @@
     on('ready', () => send({ t: 'ready', on: !w.ready }));
     on('switch', () => { localStorage.removeItem('lr-role-' + room); location.reload(); });
     on('tsnd', () => { send({ t: 'testsound' }); toast('Listen for a chime from the TV.', true); });
-    on('tcam', () => openScanner((c) => toast(/TEST$/i.test(c) ? 'Camera works! ✓' : 'Scanned a code — camera works! ✓', true)));
+    on('tcam', () => openScanner((c) => toast(c === TEST_CODE ? 'Camera works! ✓' : 'Scanned a code — camera works! ✓', true)));
     on('tmic', async () => {
       const out = $('#micout');
       if (singing) { stopSing(); out.textContent = ''; return; }
@@ -238,7 +258,7 @@
 
     if (w.type === 'hold') {
       const b = $('#hold');
-      const down = (e) => { e.preventDefault(); b.classList.add('on'); send({ t: 'hold', on: true }); if (navigator.vibrate) navigator.vibrate(30); };
+      const down = (e) => { e.preventDefault(); b.classList.add('on'); send({ t: 'hold', on: true }); vib(30); };
       const up = (e) => { e.preventDefault(); if (b.classList.contains('on')) { b.classList.remove('on'); send({ t: 'hold', on: false }); } };
       b.addEventListener('pointerdown', down); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('pointerleave', up);
       b.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -254,7 +274,7 @@
         show();
       }));
     }
-    if (w.type === 'hunt' && !w.done) on('scan', () => openScanner((c) => send({ t: 'scan', code: c })));
+    if (w.type === 'hunt' && !w.done) on('scan', () => openScanner(handleScan));
     if (w.type === 'keys') buildKeys(w.keys);
     on('replay', () => { send({ t: 'replay' }); toast('Listen to the TV…', true); });
     on('showpages', () => $('#pagesbtn').click());
@@ -334,7 +354,7 @@
     const pr = Math.min(1, holdMs / 1500);
     const bar = $('#singprog'); if (bar) bar.style.width = Math.round(pr * 100) + '%';
     const help = $('#singhelp'); if (help && blocked) help.textContent = 'Listening paused while her note plays…'; else if (help) help.textContent = 'Hold the right note steady until the bar fills.';
-    if (pr >= 1 && !sentSang) { sentSang = true; stopSing(); if (navigator.vibrate) navigator.vibrate(120); send({ t: 'sang' }); }
+    if (pr >= 1 && !sentSang) { sentSang = true; stopSing(); vib(120); send({ t: 'sang' }); }
   }
 
   if (role === 'mat' || role === 'emily') start(); else pickRole();

@@ -76,8 +76,18 @@ with sync_playwright() as p:
     ph['emily'].click('#hintbtn'); tv.wait_for_timeout(300); shot(ph['emily'], 'emily-hunt-hint2')
     scan(ph['emily'], 'K4TZ'); shot(ph['emily'], 'emily-page-reveal'); ph['emily'].click('#pgok')
     shot(tv, 'tv-hunt1-half')
-    scan(ph['mat'], 'H2PX'); assert G()['solved'], 'hunt1'
-    shot(ph['mat'], 'mat-page-reveal'); ph['mat'].click('#pgok'); shot(tv, 'tv-hunt1-after')
+    # Mat finds Emily's page with the phone's normal camera app: the QR link opens a new tab
+    old_mat = ph['mat']; nm = mk(390, 844, True)
+    nm.goto(BASE + 'play.html?scan=H2PX&as=mat'); tv.wait_for_timeout(1500); ph['mat'] = nm
+    assert G()['solved'], 'hunt1 via camera link'
+    shot(nm, 'mat-page-reveal-camera-link'); shot(old_mat, 'mat-old-tab-replaced')
+    assert old_mat.query_selector('#takeback'), 'old tab should step aside'
+    old_mat.close()
+    nm.click('#pgok'); shot(tv, 'tv-hunt1-after')
+    # test code via camera link
+    tp = mk(390, 844, True); tp.goto(BASE + 'play.html?scan=TEST&as=emily'); tp.wait_for_timeout(1200)
+    assert 'Camera works' in tp.text_content('#toast'), tp.text_content('#toast'); shot(tp, 'emily-test-link'); tp.close(); tv.wait_for_timeout(600)
+    ph['emily'].click('#takeback') if ph['emily'].query_selector('#takeback') else None; tv.wait_for_timeout(1200)
     cont(); assert G()['phase'] == 'melody'; tv.wait_for_timeout(2500); shot(tv, 'tv-melody'); shot(ph['emily'], 'emily-keys'); shot(ph['mat'], 'mat-keys')
     def play(m):
         pg = ph['mat'] if m <= 65 else ph['emily']; pg.dispatch_event(f'[data-m="{m}"]', 'pointerdown'); tv.wait_for_timeout(120)

@@ -13,7 +13,7 @@ DECODE = """async ({img, scale, blur, dim}) => {
   const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
   x.filter = `blur(${blur}px) brightness(${dim}) contrast(${dim < 1 ? 0.8 : 1})`; x.drawImage(im, 0, 0, w, h);
   const d = x.getImageData(0, 0, w, h); const r = jsQR(d.data, w, h, { inversionAttempts: 'dontInvert' });
-  return r ? r.data : null; }"""
+  return r ? (extractCode(r.data) ? 'LR-' + extractCode(r.data) : r.data) : null; }"""
 ok = True
 with sync_playwright() as p:
     b = p.chromium.launch(channel='chromium')

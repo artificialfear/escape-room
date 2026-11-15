@@ -66,6 +66,7 @@
       });
     }
     connect() {
+      if (this.stopped) return;
       if (!this.peer || this.peer.destroyed) return this.makePeer();
       if (this.peer.disconnected) { try { this.peer.reconnect(); } catch (e) {} return; }
       if (this.conn) { try { this.conn.close(); } catch (e) {} }
@@ -85,10 +86,13 @@
         if (msg.t === 'pong') return;
         this.h.onMessage(msg);
       });
-      conn.on('close', () => { if (conn === this.conn) { this.setStatus(false, 'Reconnecting…'); setTimeout(() => { if (conn === this.conn) this.connect(); }, 1500); } });
+      conn.on('close', () => { if (conn === this.conn && !this.stopped) { this.setStatus(false, 'Reconnecting…'); setTimeout(() => { if (conn === this.conn) this.connect(); }, 1500); } });
       conn.on('error', () => {});
     }
+    stop() { this.stopped = true; if (this.conn) { const c = this.conn; this.conn = null; try { c.close(); } catch (e) {} } this.setStatus(false, 'Paused'); }
+    resume() { this.stopped = false; this.connect(); }
     watchdog(force) {
+      if (this.stopped) return;
       if (this.conn && this.conn.open) {
         this.send({ t: 'ping' });
         if (Date.now() - this.lastPong > 11000 || force && Date.now() - this.lastPong > 6000) {

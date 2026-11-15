@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4 — 2026-11-15
+- Every QR code (the systems-check code and the printed pages) is now a link to the game. Scanning with the phone's normal camera app opens the game and registers the scan; the in-game Scan button still works too.
+- If a scan opens a second tab, the old tab steps aside (“Opened in another tab”) instead of the two fighting over the connection.
+- Pages printed before this update still work with the in-game Scan button.
+
 ## 1.3 — 2026-11-15
 - Printable pages redesigned as torn, aged manuscript pages (parchment, stains, wax seal, handwritten lines), with tear-off “hidden by” tabs so the found page reveals nothing about who hid it.
 - QR codes are larger and use high error correction, verified to scan at low resolution, with blur, and in dim light. Added an Ink saver option.

@@ -22,7 +22,7 @@
       if (m.t === 'hello') {
         if (!ROLES.includes(m.role)) return;
         const old = roleConn[m.role];
-        if (old && old !== conn) { try { old.close(); } catch (e) {} }
+        if (old && old !== conn) { host.send(old, { t: 'replaced' }); setTimeout(() => { try { old.close(); } catch (e) {} }, 300); }
         roleConn[m.role] = conn; conn._role = m.role; lastSeen[m.role] = Date.now();
         setConn(m.role, true); sendView(m.role);
         return;
@@ -144,7 +144,7 @@
             <a class="btn small" href="soundboard.html" target="_blank">Soundboard</a>
             <button class="btn small" id="newgame">New game (fresh puzzles)</button>
           </div>
-          <div class="testbox"><div class="qr">${qrSVG('LR-' + TEST_CODE, 4)}</div><div>Systems check: on your phone, tap <b>Test camera</b> and scan this code, <b>Test microphone</b> and hum, and <b>Test TV sound</b>. These checks reveal nothing about the game.</div></div>
+          <div class="testbox"><div class="qr">${qrSVG(scanUrl(TEST_CODE, room), 3)}</div><div>Systems check: on your phone, tap <b>Test camera</b> and scan this code, <b>Test microphone</b> and hum, and <b>Test TV sound</b>. These checks reveal nothing about the game.</div></div>
           <div class="note-sm">When you’re both joined and ready, tap <b>We’re ready</b> on your phones.</div>
         </div>
         <div style="text-align:center">

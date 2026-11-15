@@ -137,7 +137,7 @@
 
   document.getElementById('sheet').innerHTML = CARDS.map((c, i) => {
     const r = rng(c.code);
-    const q = qrcode(0, 'H'); q.addData('LR-' + c.code); q.make();
+    const q = qrcode(0, 'Q'); q.addData(scanUrl(c.code)); q.make();
     const qr = q.createSvgTag({ cellSize: 8, margin: 24, scalable: true });
     return `<div class="card" data-code="${c.code}">
       <div class="page" style="clip-path:${tornClip(r)}">
