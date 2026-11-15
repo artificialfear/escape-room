@@ -1,0 +1,52 @@
+@font-face { font-family: "Cinzel"; src: url("../fonts/cinzel-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Cinzel"; src: url("../fonts/cinzel-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Fell"; src: url("../fonts/im-fell-english-latin-400-normal.woff2") format("woff2"); font-style: normal; font-display: swap; }
+@font-face { font-family: "Fell"; src: url("../fonts/im-fell-english-latin-400-italic.woff2") format("woff2"); font-style: italic; font-display: swap; }
+@font-face { font-family: "NotoMusic"; src: url("../fonts/noto-music-music-400-normal.woff2") format("woff2"); font-display: block; }
+
+:root {
+  --bg: #0b0a0d;
+  --bg2: #15121a;
+  --ink: #eadfc6;
+  --dim: #a99e88;
+  --gold: #d9a441;
+  --gold2: #f3c867;
+  --ghost: #8fc9c0;
+  --blood: #9c3434;
+  --line: rgba(234, 223, 198, 0.18);
+  --card: rgba(28, 24, 32, 0.82);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); }
+body { font-family: "Fell", Georgia, serif; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, .cinzel { font-family: "Cinzel", "Times New Roman", serif; font-weight: 700; letter-spacing: 0.06em; }
+button { font: inherit; color: inherit; cursor: pointer; }
+.hidden { display: none !important; }
+
+/* drifting fog */
+.fog { position: fixed; inset: -20%; pointer-events: none; z-index: 0; opacity: .55;
+  background:
+    radial-gradient(40% 30% at 20% 30%, rgba(143,201,192,.10), transparent 70%),
+    radial-gradient(35% 25% at 75% 60%, rgba(143,201,192,.08), transparent 70%),
+    radial-gradient(50% 35% at 50% 90%, rgba(217,164,65,.06), transparent 70%);
+  animation: fogdrift 38s ease-in-out infinite alternate; }
+.fog.b { animation-duration: 55s; animation-direction: alternate-reverse; opacity: .4; }
+@keyframes fogdrift { from { transform: translate(-4%, -2%) scale(1); } to { transform: translate(5%, 3%) scale(1.12); } }
+.vignette { position: fixed; inset: 0; pointer-events: none; z-index: 1;
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.75) 100%); }
+
+/* staff notation */
+.staff svg { display: block; }
+.music-glyph { font-family: "NotoMusic"; }
+
+/* candle */
+.candle { position: relative; width: 34px; height: 120px; margin: 0 auto; }
+.candle .wax { position: absolute; bottom: 0; left: 4px; width: 26px; height: 78px; border-radius: 4px 4px 2px 2px;
+  background: linear-gradient(90deg, #cbbfa4, #f1e8d4 45%, #b7aa8e); }
+.candle .wick { position: absolute; bottom: 78px; left: 16px; width: 2px; height: 10px; background: #2b241c; }
+.candle .flame { position: absolute; bottom: 84px; left: 7px; width: 20px; height: 34px; border-radius: 50% 50% 45% 45% / 65% 65% 35% 35%;
+  background: radial-gradient(ellipse at 50% 75%, #fff6cf 0%, #ffd36a 35%, #ff8a2a 70%, transparent 72%);
+  filter: drop-shadow(0 0 14px rgba(255,190,90,.9)); transform-origin: 50% 90%;
+  animation: flicker 1.6s ease-in-out infinite; opacity: 0; transition: opacity .6s; }
+.candle.lit .flame { opacity: 1; }
+@keyframes flicker { 0%,100% { transform: scale(1) rotate(-1deg); } 30% { transform: scale(1.06,.94) rotate(2deg); } 60% { transform: scale(.95,1.05) rotate(-2deg); } }

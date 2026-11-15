@@ -1,0 +1,6 @@
+<!DOCTYPE html><html><head><link rel="stylesheet" href="../css/common.css"></head><body style="background:#efe3c6;--paper:#efe3c6">
+<div id="o" style="display:flex;flex-wrap:wrap;gap:10px"></div>
+<script src="../js/notation.js"></script><script>
+let h='';for(const c of ['treble','bass','alto','tenor'])for(const pc of [0,4,7,11])h+='<div>'+c+' '+pc+Notation.fragmentSVG(pc,c,{width:190})+'</div>';
+document.getElementById('o').innerHTML=h+'<div style="width:600px">'+Notation.rhythmSVG([['q','q','e'],['e','e','e','e'],['q']])+'</div>';
+</script></body></html>

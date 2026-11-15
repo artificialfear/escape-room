@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Last Recital</title>
+<link rel="stylesheet" href="css/common.css">
+<link rel="stylesheet" href="css/tv.css">
+</head>
+<body>
+<div class="fog"></div><div class="fog b"></div><div class="vignette"></div>
+<div id="app">
+  <div class="topbar">
+    <span class="brand">The Last Recital</span>
+    <span class="act" id="act"></span>
+    <span class="pdot" id="dot-mat"><i></i>Mat</span>
+    <span class="pdot" id="dot-emily"><i></i>Emily</span>
+    <span id="hintcount"></span>
+    <span class="timer" id="timer"></span>
+    <button class="gear" id="gear" title="Game menu">⚙</button>
+  </div>
+  <div id="stage"></div>
+</div>
+<div id="hint" class="hidden"></div>
+<div id="flash"></div>
+<div id="wake">
+  <h1 class="cinzel" style="color:var(--gold2);font-size:2.4em;margin:0">The Last Recital</h1>
+  <p>Click to wake the house. (This turns on the sound — browsers need one click first.)</p>
+  <button class="btn primary" id="wakebtn">Wake the house</button>
+</div>
+<script src="lib/peerjs.min.js"></script>
+<script src="lib/qrcode.js"></script>
+<script src="js/cards-data.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/notation.js"></script>
+<script src="js/net.js"></script>
+<script src="js/game.js"></script>
+<script src="js/tv.js"></script>
+</body>
+</html>
