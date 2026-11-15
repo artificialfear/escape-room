@@ -40,3 +40,9 @@ enc(y,OUT+'sfx_wake.mp3'); report['sfx_wake']=dict(lufs_in=li,gain=round(20*np.l
 json.dump(loops,open(OUT+'loops.json','w'),indent=1)
 files=sorted(f for f in os.listdir(OUT) if f.endswith('.mp3')); json.dump(files,open(OUT+'manifest.json','w'),indent=1)
 print(json.dumps(report,indent=1,default=float))
+
+# --- sfx_house1.mp3 (Thunder slot, plays with each lightning flash) ---
+# Cut from thunder_for_loop.mp3: 117.76 s -> 121.90 s (the loudest, fastest-decaying clap,
+# well clear of the next strike at ~122.5 s). 6 ms fade-in, 1.4 s curved fade-out
+# (linear**1.6), normalized to -16 LUFS, tanh soft limit to -1 dBTP, LAME VBR q2.
+# Result: 4.14 s, -16.6 LUFS, -0.95 dBTP.

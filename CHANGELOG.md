@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.2 — 2026-11-15
+- Blackwood Hall: every lightning flash now cracks with a real thunderclap, cut from Mat's storm recording (about 4 seconds: sharp crack, short rumble, fade).
+
 ## 2.1 — 2026-11-15
 - Blackwood Hall: Mat's recorded storm. Continuous rain and rolling thunder now loop seamlessly under the music (new **Ambience** section on its soundboard, with its own volume). A big thunderclap plays when you click “Approach the house”. The storm calms at the ending.
 
