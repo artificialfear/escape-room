@@ -32,6 +32,9 @@
     { id: 'music_act2', kind: 'music', loop: true, label: 'Act II background', desc: 'The middle third: questioning the household. Suspicious intrigue, a little brisker. Loops.' },
     { id: 'music_act3', kind: 'music', loop: true, label: 'Act III background', desc: 'The final third: closing in. Building suspense. Loops.' },
     { id: 'music_ending', kind: 'music', loop: false, label: 'Ending music', desc: 'Case closed. Satisfying resolution, a touch melancholy. Plays once, a few seconds into the ending.' },
+    { id: 'amb_rain', kind: 'ambience', loop: true, label: 'Rain', desc: 'Continuous rain on the windows, under the music for the whole game. Loops seamlessly. (Built-in: synthesized rain.)' },
+    { id: 'amb_thunder', kind: 'ambience', loop: true, label: 'Rolling thunder', desc: 'A continuous bed of distant, rolling thunder under the rain. Loops. (Built-in: none.)' },
+    { id: 'sfx_wake', kind: 'sfx', noBorrow: true, label: 'Opening thunderclap', desc: 'The big thunderclap when you click “Approach the house” on the TV. (Built-in: synthesized thunder.)' },
     { id: 'sfx_transition', kind: 'sfx', label: 'Scene change', desc: 'As new scenes begin: a door creak, footsteps, or a roll of thunder. About 2 seconds.' },
     { id: 'sfx_solve', kind: 'sfx', label: 'Clue solved', desc: 'A satisfying “aha!” sting, 1–3 seconds.' },
     { id: 'sfx_climax', kind: 'sfx', label: 'Case solved', desc: 'Naming the killer correctly. A big dramatic sting, 3–6 seconds.' },
@@ -107,6 +110,7 @@
   let ready = false; const readyFns = [];
   async function loadSlot(slot) {
     if (cur && cur.id === slot.id) stopMusic(0.3);
+    if (amb[slot.id]) ambStop(slot.id, 0.3);
     if (bank[slot.id] && bank[slot.id].src === 'local') URL.revokeObjectURL(bank[slot.id].url);
     delete bank[slot.id];
     let entry = null;
@@ -184,17 +188,53 @@
   }
   function playingId() { return cur ? cur.id : null; }
 
+  // ---- ambience: looping beds (rain, thunder) that play alongside the music, each with its own level ----
+  const amb = {}; // id -> { src, gain, level, token }
+  function ambLevel(id, level) { return (settings.amb != null ? settings.amb : 0.8) * slotVol(id) * level; }
+  async function ambStart(id, level = 1) {
+    const e = bank[id]; if (!e || e.error) return false;
+    if (amb[id]) { ambSet(id, level); return true; }
+    const token = {}; amb[id] = { token, level };
+    let buf; try { buf = await decodeAmb(id); } catch (err) { delete amb[id]; return false; }
+    if (!amb[id] || amb[id].token !== token) return false;
+    const c = Sound.ctx(), lp = loopFor(id);
+    const src = c.createBufferSource(); src.buffer = buf; src.loop = true;
+    if (lp) { src.loopStart = Math.min(lp.start, buf.duration); src.loopEnd = Math.min(lp.end, buf.duration); }
+    const g = c.createGain(); g.gain.value = 0.0001; src.connect(g); g.connect(Sound.master());
+    src.start(0, lp ? Math.random() * Math.max(0, lp.end - lp.start - 5) + lp.start : 0); // start somewhere in the loop so it never sounds like it "begins"
+    g.gain.setTargetAtTime(Math.max(0.0001, ambLevel(id, amb[id].level)), c.currentTime, 0.8);
+    Object.assign(amb[id], { src, gain: g });
+    return true;
+  }
+  function decodeAmb(id) { const e = bank[id]; if (!e.ambP) e.ambP = fetch(e.url).then((r) => r.arrayBuffer()).then((ab) => Sound.ctx().decodeAudioData(ab)); return e.ambP; }
+  function ambSet(id, level) { const a = amb[id]; if (!a) return; a.level = level; if (a.gain) { const c = Sound.ctx(); a.gain.gain.cancelScheduledValues(c.currentTime); a.gain.gain.setTargetAtTime(Math.max(0.0001, ambLevel(id, level)), c.currentTime, 0.8); } }
+  function ambStop(id, fade = 2) {
+    const a = amb[id]; if (!a) return; delete amb[id];
+    if (!a.src) return;
+    const c = Sound.ctx(); a.gain.gain.cancelScheduledValues(c.currentTime); a.gain.gain.setTargetAtTime(0.0001, c.currentTime, fade / 3);
+    setTimeout(() => { try { a.src.stop(); } catch (e) {} }, fade * 1000 + 200);
+  }
+  async function ambSeam(id) {
+    ambStop(id, 0.1); const e = bank[id]; if (!e) return;
+    const buf = await decodeAmb(id), lp = loopFor(id), c = Sound.ctx();
+    const src = c.createBufferSource(); src.buffer = buf; src.loop = true; if (lp) { src.loopStart = lp.start; src.loopEnd = lp.end; }
+    const g = c.createGain(); g.gain.value = ambLevel(id, 1); src.connect(g); g.connect(Sound.master());
+    src.start(0, lp ? Math.max(0, lp.end - 8) : 0); amb[id] = { token: {}, level: 1, src, gain: g };
+  }
+  function ambStopAll(fade) { Object.keys(amb).forEach((id) => ambStop(id, fade)); }
+  function ambRefresh() { Object.keys(amb).forEach((id) => ambSet(id, amb[id].level)); }
+
   // Live updates from the Soundboard page (same computer, same browser)
   let chan = null;
   try {
     chan = new BroadcastChannel(EP + '-soundboard');
     chan.onmessage = async (e) => {
       const m = e.data || {};
-      if (m.t === 'settings') { try { Object.assign(settings, JSON.parse(localStorage.getItem(SET_KEY) || '{}')); } catch (err) {} setDuck(duckLevel); }
+      if (m.t === 'settings') { try { Object.assign(settings, JSON.parse(localStorage.getItem(SET_KEY) || '{}')); } catch (err) {} setDuck(duckLevel); ambRefresh(); }
       if (m.t === 'slot') { const slot = SLOTS.find((s) => s.id === m.id); if (slot) { await loadSlot(slot); AudioBank.onChange && AudioBank.onChange(slot); } }
     };
   } catch (e) {}
   function announce(msg) { try { chan && chan.postMessage(msg); } catch (e) {} }
 
-  window.AudioBank = { EP, FOLDER, announce, loopFor, SLOTS, settings, saveSettings, slotVol, loadAll, loadSlot, onReady, has, bank, sfx, music, stopMusic, setDuck, playingId, putLocal, delLocal };
+  window.AudioBank = { EP, FOLDER, ambSeam, ambStart, ambSet, ambStop, ambStopAll, ambRefresh, playingAmb: () => Object.keys(amb), announce, loopFor, SLOTS, settings, saveSettings, slotVol, loadAll, loadSlot, onReady, has, bank, sfx, music, stopMusic, setDuck, playingId, putLocal, delLocal };
 })();

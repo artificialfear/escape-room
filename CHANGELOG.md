@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.1 — 2026-11-15
+- Blackwood Hall: Mat's recorded storm. Continuous rain and rolling thunder now loop seamlessly under the music (new **Ambience** section on its soundboard, with its own volume). A big thunderclap plays when you click “Approach the house”. The storm calms at the ending.
+
 ## 2.0 — 2026-11-15
 - New game: **Death at Blackwood Hall** (`blackwood.html`), a Victorian murder mystery on a stormy night. One phone is the Inspector and the other is the Doctor, each with different evidence and a casebook that builds up over the game. Every new case randomizes the killer, the weapon, the time of death and the clues. Includes printable evidence tags, its own soundboard, storm scenes (manor, library, drawing room, study), a case reconstruction, and a Scotland Yard case file with a detective rating.
 - The Last Recital is unchanged apart from a small link to the new game on its join screen.

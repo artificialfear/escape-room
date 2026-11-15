@@ -26,7 +26,7 @@
   let playingSrc = null;
 
   function stopAll() {
-    AB.stopMusic(0.3); Sound.stopAmbient(); Sound.stopRain && Sound.stopRain();
+    AB.stopMusic(0.3); AB.ambStopAll(0.3); Sound.stopAmbient(); Sound.stopRain && Sound.stopRain();
     if (playingSrc) { try { playingSrc.stop(); } catch (e) {} playingSrc = null; }
   }
 
@@ -75,7 +75,8 @@
   }
 
   function build() {
-    const groups = { music: $('#music'), sfx: $('#sfx') };
+    const groups = { music: $('#music'), sfx: $('#sfx'), ambience: $('#ambience') };
+    if (AB.SLOTS.some((x) => x.kind === 'ambience')) { $('#ambh').style.display = ''; $('#mambl').style.display = ''; }
     AB.SLOTS.forEach((slot) => {
       groups[slot.kind].insertAdjacentHTML('beforeend', rowHTML(slot));
       const row = $('#row-' + slot.id);
@@ -83,11 +84,12 @@
         Sound.ensure(); stopAll();
         if (AB.has(slot.id)) {
           if (slot.kind === 'music') { AB.setDuck(1); AB.music(slot.id); }
+          else if (slot.kind === 'ambience') AB.ambStart(slot.id, 1);
           else playingSrc = AB.sfx(slot.id);
         } else if (BUILTIN[slot.id].play) BUILTIN[slot.id].play();
       };
       $('[data-stop]', row).onclick = stopAll;
-      $('[data-seam]', row).onclick = () => { Sound.ensure(); stopAll(); const lp = AB.loopFor(slot.id); AB.setDuck(1); AB.music(slot.id, { offset: lp.end - 8, restart: true }); };
+      $('[data-seam]', row).onclick = () => { Sound.ensure(); stopAll(); const lp = AB.loopFor(slot.id); AB.setDuck(1); if (slot.kind === 'ambience') AB.ambSeam(slot.id); else AB.music(slot.id, { offset: lp.end - 8, restart: true }); };
       const input = $('[data-file]', row);
       $('[data-pick]', row).onclick = () => input.click();
       input.onchange = () => setFile(slot, input.files[0]).then(() => (input.value = ''));
@@ -97,7 +99,7 @@
       };
       $('[data-vol]', row).oninput = (e) => {
         AB.settings.vol[slot.id] = +e.target.value; AB.saveSettings(); refresh(slot);
-        AB.setDuck(1); AB.announce({ t: 'settings' });
+        AB.setDuck(1); AB.ambRefresh(); AB.announce({ t: 'settings' });
       };
       row.addEventListener('dragover', (e) => { e.preventDefault(); row.classList.add('drag'); });
       row.addEventListener('dragleave', () => row.classList.remove('drag'));
@@ -109,6 +111,8 @@
     mm.oninput = () => { AB.settings.music = +mm.value; AB.saveSettings(); AB.setDuck(1); AB.announce({ t: 'settings' }); };
     ms.oninput = () => { AB.settings.sfx = +ms.value; AB.saveSettings(); AB.announce({ t: 'settings' }); };
     $('#stopall').onclick = stopAll;
+    const ma = $('#mamb'); ma.value = AB.settings.amb != null ? AB.settings.amb : 0.8;
+    ma.oninput = () => { AB.settings.amb = +ma.value; AB.saveSettings(); AB.ambRefresh(); AB.announce({ t: 'settings' }); };
     $('#clearlocal').onclick = async () => {
       if (!confirm('Remove every file you added on this page, so the game uses the repo’s sounds folder instead?')) return;
       stopAll();
@@ -126,6 +130,9 @@
     BUILTIN.music_title = { text: 'Built-in: rain', play: () => Sound.startRain && Sound.startRain() };
     ['music_hiding', 'music_act1', 'music_act2', 'music_act3'].forEach((k) => (BUILTIN[k] = { text: 'Built-in: rain + low drone', play: () => { Sound.startRain && Sound.startRain(); Sound.startAmbient(0.6); } }));
     BUILTIN.music_ending = { text: 'Built-in: silence' };
+    BUILTIN.amb_rain = { text: 'Built-in: synthesized rain', play: () => Sound.startRain() };
+    BUILTIN.amb_thunder = { text: 'Built-in: none' };
+    BUILTIN.sfx_wake = { text: 'Built-in: synthesized thunder', play: () => Sound.thunder(0.6) };
     BUILTIN.sfx_house1 = BUILTIN.sfx_house2 = BUILTIN.sfx_house3 = { text: 'Built-in: thunder', play: () => Sound.thunder(0.5) };
   } else $('#epname').textContent = '· The Last Recital';
   build();

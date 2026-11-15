@@ -61,21 +61,26 @@
   const MUSIC_FOR = { lobby: 'music_title', hide: 'music_hiding', intro: 'music_act1', roles: 'music_act1', body: 'music_act1', letter: 'music_act1', hunt1: 'music_act2', interview: 'music_act2', diary: 'music_act2', hunt2: 'music_act3', accuse: 'music_act3' };
   function applyPauseAudio(on) {
     if (!Sound.unlocked()) return;
-    if (on) { AudioBank.setDuck(0.18); if (Sound.ambientOn()) Sound.startAmbient(0.25); }
+    if (on) { AudioBank.setDuck(0.18); if (Sound.ambientOn()) Sound.startAmbient(0.25); AudioBank.playingAmb().forEach((id) => AudioBank.ambSet(id, 0.3)); }
     else applyMusic();
+  }
+  // the storm bed: your recorded rain/thunder loops if present, otherwise synthesized rain
+  function storm(level) {
+    if (AudioBank.has('amb_rain')) { Sound.stopRain(); AudioBank.ambStart('amb_rain', level); } else Sound.startRain(level);
+    if (AudioBank.has('amb_thunder')) AudioBank.ambStart('amb_thunder', level);
   }
   function applyMusic() {
     if (!Sound.unlocked()) return;
     const ph = game.st.phase;
     if (ph === 'end') return;
     AudioBank.setDuck(1);
-    Sound.startRain(ph === 'lobby' || ph === 'intro' ? 1 : 0.6);
+    storm(ph === 'lobby' || ph === 'intro' ? 1 : 0.65);
     const id = MUSIC_FOR[ph];
     if (id && AudioBank.has(id)) { Sound.stopAmbient(); AudioBank.music(id); }
     else { AudioBank.stopMusic(); if (ph === 'lobby') Sound.stopAmbient(); else Sound.startAmbient(ph === 'accuse' ? 0.9 : 0.6); }
   }
   AudioBank.loadAll().then(applyMusic);
-  AudioBank.onChange = (slot) => { if (slot.kind === 'music') { AudioBank.stopMusic(0.5); setTimeout(applyMusic, 700); } };
+  AudioBank.onChange = (slot) => { if (slot.kind === 'music' || slot.kind === 'ambience') { AudioBank.stopMusic(0.5); AudioBank.ambStop(slot.id, 0.5); setTimeout(applyMusic, 700); } };
   const fx = (id, fallback) => { if (!AudioBank.sfx(id)) fallback(); };
   // the storm: random thunder and lightning, creaks and wind
   setInterval(() => {
@@ -91,7 +96,7 @@
       case 'enter': applyMusic(); fx('sfx_transition', () => Sound.whoosh(0.2)); if (game.st.phase === 'accuse') fx('sfx_heartbeat', Sound.heartbeat); break;
       case 'solve': fx('sfx_solve', Sound.chime); break;
       case 'bigsolve': fx('sfx_climax', Sound.bigChime); break;
-      case 'ending': setTimeout(() => { Sound.stopAmbient(); AudioBank.stopMusic(3); Sound.startRain(0.25); }, 2500); setTimeout(() => { AudioBank.setDuck(1); AudioBank.music('music_ending'); }, 6000); break;
+      case 'ending': setTimeout(() => { Sound.stopAmbient(); AudioBank.stopMusic(3); AudioBank.ambStop('amb_thunder', 6); if (AudioBank.has('amb_rain')) AudioBank.ambSet('amb_rain', 0.3); else Sound.startRain(0.25); }, 2500); setTimeout(() => { AudioBank.setDuck(1); AudioBank.music('music_ending'); }, 6000); break;
       case 'wrong': fx('sfx_wrong', Sound.wrong); break;
       case 'ding': fx('sfx_progress', () => Sound.bell(79, 0, 1.5, 0.25)); break;
       case 'page': fx('sfx_page', () => { [67, 71, 74, 79].forEach((m, i) => Sound.bell(m, i * 0.12, 2, 0.2)); Sound.whoosh(0.12); }); break;
@@ -341,7 +346,7 @@
   $('#wakebtn').onclick = () => {
     keepAwake();
     Sound.ensure();
-    Sound.ctx().resume().then(() => { strike(0.6); setTimeout(() => { applyMusic(); if (game.st.paused) applyPauseAudio(true); }, 1200); }, applyMusic);
+    Sound.ctx().resume().then(() => { Scenes.lightning(); if (!AudioBank.sfx('sfx_wake')) Sound.thunder(0.6); setTimeout(() => { applyMusic(); if (game.st.paused) applyPauseAudio(true); }, 1200); }, applyMusic);
     $('#wake').classList.add('leaving');
     setTimeout(() => document.body.classList.remove('asleep'), 1200);
     setTimeout(lightsOn, 900);

@@ -22,6 +22,9 @@ with sync_playwright() as p:
     tv = mk(1600, 900); tv.goto(BASE + 'blackwood.html'); tv.wait_for_timeout(2500); shot(tv, 'tv-wake')
     tv.click('#wakebtn'); tv.wait_for_timeout(2500)
     room = tv.evaluate("localStorage.getItem('bw-room')")
+    tv.wait_for_timeout(1500)
+    amb = tv.evaluate("AudioBank.playingAmb()"); assert 'amb_rain' in amb and 'amb_thunder' in amb, amb
+    assert tv.evaluate("AudioBank.has('sfx_wake') && AudioBank.has('amb_rain')"), 'storm sounds loaded'
     ph = {r: mk(390, 844) for r in ['mat', 'emily']}
     for r in ph: ph[r].goto(BASE + f'play.html?r={room}&g=bw&as={r}')
     ph['mat'].wait_for_selector('#ready'); tv.wait_for_timeout(500); shot(tv, 'tv-lobby'); shot(ph['mat'], 'mat-lobby')
