@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3 — 2026-11-15
+- Printable pages redesigned as torn, aged manuscript pages (parchment, stains, wax seal, handwritten lines), with tear-off “hidden by” tabs so the found page reveals nothing about who hid it.
+- QR codes are larger and use high error correction, verified to scan at low resolution, with blur, and in dim light. Added an Ink saver option.
+
 ## 1.2 — 2026-11-15
 - Mat's own music and sound effects are now built in (sounds/ folder). Silence is trimmed and loudness is matched across all files, and the music tracks have seamless loop points.
 - Music now plays from decoded buffers, so loops are sample-accurate and gapless.

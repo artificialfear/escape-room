@@ -5,36 +5,156 @@
 <title>The Last Recital · Printable pages</title>
 <link rel="stylesheet" href="css/common.css">
 <style>
-  body { background: #fff; color: #1b1612; font-family: "Fell", Georgia, serif; }
-  .noprint { max-width: 8in; margin: 1em auto; padding: 1em; background: #f3ead6; border-radius: 8px; }
-  .sheet { width: 8in; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: .3in; padding: .3in 0; }
-  .card { border: 2px dashed #8a7a5c; border-radius: 10px; padding: .25in; height: 4.6in; display: flex; flex-direction: column; align-items: center; justify-content: space-between; text-align: center; background: #fbf6ea; }
-  .card .t { font-family: "Cinzel", serif; font-weight: 700; letter-spacing: .1em; font-size: 15pt; }
-  .card .who { font-family: "Cinzel", serif; font-size: 12pt; letter-spacing: .12em; color: #6b3b20; }
-  .card .qr svg { width: 2.3in; height: 2.3in; display: block; }
-  .card .code { font-family: "Cinzel", serif; font-size: 13pt; letter-spacing: .3em; }
-  .card .warn { font-style: italic; font-size: 10pt; color: #6b5338; }
-  @media print { .noprint { display: none; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+  @page { size: letter; margin: 0.35in; }
+  html, body { height: auto; }
+  html { background: #2a2420; }
+  body { background: #2a2420; color: #1b1612; font-family: "Fell", Georgia, serif; margin: 0; }
+  .noprint { max-width: 7.8in; margin: 1em auto; padding: 1em 1.3em; background: #f3ead6; border-radius: 8px; line-height: 1.45; }
+  .noprint h2 { margin: 0 0 .3em; }
+  .noprint label { display: inline-flex; align-items: center; gap: .4em; margin-left: 1em; }
+  .sheet { width: 7.8in; margin: 0 auto 2em; display: grid; grid-template-columns: 1fr 1fr; gap: .18in .3in; }
+
+  .card { position: relative; height: 4.95in; break-inside: avoid; display: flex; flex-direction: column; }
+  /* the page itself (torn parchment) */
+  .page { position: relative; flex: 1; overflow: hidden; color: #2b1d10;
+    background:
+      radial-gradient(ellipse at 50% 45%, rgba(255,250,235,.0) 45%, rgba(120,72,24,.28) 85%, rgba(70,38,10,.55) 100%),
+      radial-gradient(circle at 18% 22%, #f5ead0, #ead8b0 60%, #dcc28e);
+  }
+  .page .grain { position: absolute; inset: 0; width: 100%; height: 100%; mix-blend-mode: multiply; opacity: .55; pointer-events: none; }
+  .page .art { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; align-items: center; padding: .26in .3in .2in; text-align: center; }
+  .title { font-family: "Fell", serif; font-style: italic; font-size: 25pt; line-height: 1; margin-top: .36in; letter-spacing: .01em; color: #3a2412; }
+  .sub { font-family: "Cinzel", serif; font-size: 7pt; letter-spacing: .35em; color: #6b4a2a; margin-top: .06in; }
+  /* QR cartouche: kept flat and high-contrast so it scans */
+  .cartouche { margin-top: .16in; padding: .07in; border: 1.5px solid #4a2f18; outline: 1px solid #4a2f18; outline-offset: 3px; background: #fbf5e6; }
+  .cartouche svg { display: block; width: 1.9in; height: 1.9in; }
+  .cartouche svg rect[fill="#ffffff"], .cartouche svg rect:first-child { fill: #fbf5e6; }
+  .note { font-style: italic; font-size: 9.5pt; color: #4a3220; margin-top: .14in; max-width: 2.7in; line-height: 1.25; }
+  .catalog { position: absolute; bottom: .16in; right: .3in; font-family: "Cinzel", serif; font-size: 8pt; letter-spacing: .18em; color: #5a3d22; z-index: 2; }
+  .catalog b { font-size: 9.5pt; letter-spacing: .25em; color: #2b1d10; }
+
+  /* tear-off tab with the hiding instructions */
+  .tab { height: .5in; margin-top: .07in; border: 1.5px dashed #8a7a5c; border-radius: 4px; background: #fff; display: flex; align-items: center; justify-content: center; gap: .12in; font-family: "Cinzel", serif; font-size: 8.5pt; letter-spacing: .12em; color: #3a2a1a; position: relative; }
+  .tab b { font-size: 10pt; }
+  .tab .cut { position: absolute; top: -.13in; left: .1in; font-size: 11pt; color: #8a7a5c; background: #2a2420; padding: 0 .04in; line-height: 1; }
+  .tab small { font-family: "Fell", serif; font-style: italic; letter-spacing: 0; font-size: 8.5pt; color: #6b5338; }
+
+  /* ink saver: drop the parchment fills, keep the art lines */
+  body.inksaver .page { background: #fff !important; }
+  body.inksaver .grain, body.inksaver .stain { display: none; }
+  body.inksaver .cartouche { background: #fff; }
+
+  @media print {
+    html, body { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .noprint { display: none; }
+    .sheet { margin: 0 auto; }
+    .tab .cut { background: #fff; }
+  }
 </style>
 </head>
 <body>
 <div class="noprint">
-  <h2 class="cinzel" style="margin-top:0">Printable pages</h2>
-  <p>Print this one page, then cut out the four cards. The game will tell each of you when to hide yours — <b>don’t hide them yet</b>.</p>
-  <p>The codes mean nothing by themselves, so it’s fine to see them. <b>No printer?</b> Write each code (and who hides it) on a sticky note instead; you can type the code on your phone instead of scanning.</p>
-  <button onclick="print()" style="font-size:1.1em;padding:.5em 1.2em">Print</button>
+  <h2 class="cinzel">Printable pages</h2>
+  <p>Print this single sheet, then cut out the four pages along their edges. Each page has a <b>tab</b> at the bottom saying who hides it. <b>Don’t hide anything yet</b> — the game tells each of you when, and you tear the tab off as you hide the page.</p>
+  <p><b>Print settings (Chrome):</b> Scale 100% · Margins Default · open “More settings” and turn on <b>Background graphics</b>. Low on ink? Use <b>Ink saver</b>; the pages still work.<br>
+  <b>No printer?</b> Write each tab’s code (the “No.” on each page) on a sticky note; you can type the code on your phone instead of scanning.</p>
+  <button onclick="print()" style="font-size:1.1em;padding:.45em 1.2em">Print</button>
+  <label><input type="checkbox" id="inksaver"> Ink saver</label>
 </div>
 <div class="sheet" id="sheet"></div>
 <script src="lib/qrcode.js"></script>
 <script src="js/cards-data.js"></script>
 <script>
+(function () {
   const who = { mat: 'MAT', emily: 'EMILY' };
-  document.getElementById('sheet').innerHTML = CARDS.map((c) => {
-    const q = qrcode(0, 'M'); q.addData('LR-' + c.code); q.make();
-    return `<div class="card"><div class="t">THE LAST RECITAL</div><div class="who">HIDDEN BY ${who[c.hider]} · PAGE ${c.slot}</div>
-      <div class="qr">${q.createSvgTag({ cellSize: 8, margin: 1, scalable: true })}</div>
-      <div class="code">${c.code}</div><div class="warn">A torn page. Hide it when the game tells you to.</div></div>`;
+  const NOTES = [
+    '…should these pages be found, play them for me.',
+    '…I hid them where only you would think to look.',
+    '…it is not finished. It must be finished.',
+    '…do not let the music end with me.',
+  ];
+  function rng(seed) { let a = 0; for (const ch of seed) a = (a * 31 + ch.charCodeAt(0)) >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+  // jagged, torn outline (percent coordinates)
+  function tornClip(r) {
+    const pts = [];
+    const edge = (x0, y0, x1, y1, n, amp, axis) => {
+      for (let i = 0; i < n; i++) {
+        const t = i / n; let x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t;
+        const j = (r() * amp) * (r() < 0.15 ? 2.2 : 1);
+        if (axis === 'top') y += j; if (axis === 'bottom') y -= j; if (axis === 'left') x += j; if (axis === 'right') x -= j;
+        pts.push(`${x.toFixed(2)}% ${y.toFixed(2)}%`);
+      }
+    };
+    edge(0, 0, 100, 0, 34, 1.6, 'top'); edge(100, 0, 100, 100, 40, 2.4, 'right');
+    edge(100, 100, 0, 100, 34, 1.6, 'bottom'); edge(0, 100, 0, 0, 40, 2.4, 'left');
+    return `polygon(${pts.join(',')})`;
+  }
+
+  function art(r, code) {
+    const W = 360, H = 460;
+    const id = code;
+    // faint staves across the top and bottom (pre-ruled manuscript paper)
+    let staves = '';
+    [26, 400].forEach((top, si) => {
+      for (let l = 0; l < 5; l++) {
+        const y = top + l * 6, wob = (r() - .5) * 2;
+        staves += `<path d="M22 ${y} Q ${W / 2} ${y + wob} ${W - 22} ${y + (r() - .5) * 1.5}" stroke="#7a5230" stroke-width=".7" fill="none" opacity="${si ? .22 : .3}"/>`;
+      }
+      [22, 120 + r() * 20, 230 + r() * 20, W - 22].forEach((x) => { staves += `<line x1="${x}" x2="${x}" y1="${top}" y2="${top + 24}" stroke="#7a5230" stroke-width=".7" opacity=".25"/>`; });
+    });
+    // scribbled-out ink in the top stave
+    let scribble = `<path d="M${70 + r() * 40} 38 ` + Array.from({ length: 9 }, () => `l ${6 + r() * 6} ${(r() - .5) * 16}`).join(' ') + `" stroke="#2b1d10" stroke-width="1.6" fill="none" opacity=".55" stroke-linecap="round"/>`;
+    // coffee ring + ink blot
+    const cx = 60 + r() * 240, cy = r() < .5 ? 330 + r() * 40 : 120 + r() * 30, cr = 34 + r() * 16;
+    const stain = `<g class="stain" filter="url(#rough-${id})"><circle cx="${cx}" cy="${cy}" r="${cr}" fill="none" stroke="#8a5424" stroke-width="3" opacity=".22"/><circle cx="${cx + 2}" cy="${cy + 1}" r="${cr - 4}" fill="#9a6430" opacity=".06"/></g>`;
+    const bx = r() < .5 ? 30 + r() * 40 : W - 70 + r() * 30, by = 60 + r() * 50;
+    const blot = `<g class="stain" filter="url(#rough-${id})" opacity=".7"><circle cx="${bx}" cy="${by}" r="${5 + r() * 4}" fill="#24170c"/><circle cx="${bx + 9}" cy="${by + 6}" r="${1.8}" fill="#24170c"/><circle cx="${bx - 7}" cy="${by + 9}" r="1.2" fill="#24170c"/></g>`;
+    // wax seal
+    const sx = r() < .5 ? W - 52 : 52, sy = 70 + r() * 12;
+    let poly = ''; for (let i = 0; i < 26; i++) { const a = i / 26 * Math.PI * 2, rr = 25 + r() * 4; poly += `${(sx + Math.cos(a) * rr).toFixed(1)},${(sy + Math.sin(a) * rr).toFixed(1)} `; }
+    const seal = `<g transform="rotate(${(r() - .5) * 30} ${sx} ${sy})">
+      <polygon points="${poly}" fill="url(#wax-${id})"/>
+      <circle cx="${sx}" cy="${sy}" r="17" fill="none" stroke="#5e0f0f" stroke-width="1.6" opacity=".8"/>
+      <circle cx="${sx}" cy="${sy}" r="19.5" fill="none" stroke="#c45a52" stroke-width=".6" opacity=".5"/>
+      <text x="${sx}" y="${sy + 6}" text-anchor="middle" font-family="Fell, Georgia, serif" font-style="italic" font-size="17" fill="#4d0a0a" opacity=".85">EV</text>
+      <text x="${sx - .7}" y="${sy + 5.3}" text-anchor="middle" font-family="Fell, Georgia, serif" font-style="italic" font-size="17" fill="#d36d64" opacity=".35">EV</text></g>`;
+    // flourish under the subtitle
+    const fl = `<path d="M ${W / 2 - 70} 118 C ${W / 2 - 40} 108, ${W / 2 - 20} 128, ${W / 2} 118 S ${W / 2 + 40} 108, ${W / 2 + 70} 118" stroke="#5a3a1e" stroke-width="1" fill="none" opacity=".55"/>
+      <circle cx="${W / 2}" cy="118" r="2" fill="#5a3a1e" opacity=".6"/>`;
+    return `<svg class="art" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="rough-${id}"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="${Math.floor(r() * 99)}"/><feDisplacementMap in="SourceGraphic" scale="5"/></filter>
+        <radialGradient id="wax-${id}" cx="40%" cy="35%"><stop offset="0" stop-color="#b7322c"/><stop offset=".6" stop-color="#871c1a"/><stop offset="1" stop-color="#5a0d0d"/></radialGradient>
+      </defs>
+      ${staves}${stain}${blot}${seal}
+    </svg>`;
+  }
+  function grain(seed) {
+    return `<svg class="grain" xmlns="http://www.w3.org/2000/svg"><filter id="g${seed}"><feTurbulence type="fractalNoise" baseFrequency=".75" numOctaves="3" seed="${seed}"/><feColorMatrix values="0 0 0 0 .45  0 0 0 0 .3  0 0 0 0 .15  0 0 0 .55 0"/></filter><rect width="100%" height="100%" filter="url(#g${seed})"/></svg>`;
+  }
+
+  document.getElementById('sheet').innerHTML = CARDS.map((c, i) => {
+    const r = rng(c.code);
+    const q = qrcode(0, 'H'); q.addData('LR-' + c.code); q.make();
+    const qr = q.createSvgTag({ cellSize: 8, margin: 24, scalable: true });
+    return `<div class="card" data-code="${c.code}">
+      <div class="page" style="clip-path:${tornClip(r)}">
+        ${grain(i + 3)}${art(r, c.code)}
+        <div class="content">
+          <div class="title">Requiem</div>
+          <div class="sub">A PAGE TORN FROM THE SCORE</div>
+          <div class="cartouche">${qr}</div>
+          <div class="note">${NOTES[i % NOTES.length]}</div>
+        </div>
+        <div class="catalog">No. <b>${c.code}</b></div>
+      </div>
+      <div class="tab"><span class="cut">✂</span><span>HIDDEN BY <b>${who[c.hider]}</b> · PAGE ${c.slot}</span><small>tear off as you hide it</small></div>
+    </div>`;
   }).join('');
+  document.getElementById('inksaver').onchange = (e) => document.body.classList.toggle('inksaver', e.target.checked);
+})();
 </script>
 </body>
 </html>

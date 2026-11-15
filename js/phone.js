@@ -155,7 +155,7 @@
         h = `<div class="title">Shh…</div><div class="panel prompt">${w.text}</div>`; break;
       case 'hideform':
         h = `<div class="title">Hide your pages</div>
-          <div class="prompt">Take the two printed pages marked <b>HIDDEN BY ${v.name.toUpperCase()}</b>. Hide each one in a <b>different</b> spot anywhere in the house — somewhere safe that ${v.other} can reach. Don’t read or show them.</div>
+          <div class="prompt">Take the two printed pages whose tabs say <b>HIDDEN BY ${v.name.toUpperCase()}</b>. Hide each one in a <b>different</b> spot anywhere in the house — somewhere safe that ${v.other} can reach. <b>Tear off the tab</b> as you hide each page, and remember which was Page I and Page II.</div>
           <div class="panel muted" style="font-size:.9em">Make them a little tricky, but findable in a few minutes. Then tell the house where you hid them. ${v.other} will only ever see the room — and your whisper, if they ask for help.</div>
           ${w.cards.map((s) => `<div class="panel"><div class="cinzel" style="color:var(--gold2)">Page ${s}</div>
             <label class="l">Room</label><select id="room-${s}"><option value="">Choose a room…</option>${w.rooms.map((r) => `<option>${r}</option>`).join('')}</select>
