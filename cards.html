@@ -40,6 +40,10 @@
   .tab .cut { position: absolute; top: -.13in; left: .1in; font-size: 11pt; color: #8a7a5c; background: #2a2420; padding: 0 .04in; line-height: 1; }
   .tab small { font-family: "Fell", serif; font-style: italic; letter-spacing: 0; font-size: 8.5pt; color: #6b5338; }
 
+  body.bw .page { background: radial-gradient(ellipse at 50% 45%, rgba(255,250,235,0) 50%, rgba(110,80,30,.3) 90%), linear-gradient(170deg, #e6cf98, #d4b77c 60%, #c9a868); }
+  body.bw .cartouche { padding: .1in; background: #fffaf0; margin-top: .1in; }
+  body.bw .cartouche svg { width: 2.1in; height: 2.1in; }
+  body.bw .title { font-family: "Cinzel", serif; font-style: normal; font-weight: 700; letter-spacing: .2em; font-size: 18pt; margin-top: .42in; }
   /* ink saver: drop the parchment fills, keep the art lines */
   body.inksaver .page { background: #fff !important; }
   body.inksaver .grain, body.inksaver .stain { display: none; }
@@ -68,6 +72,26 @@
 <script>
 (function () {
   const who = { mat: 'MAT', emily: 'EMILY' };
+  // ?g=bw prints the Death at Blackwood Hall evidence tags (same codes, so either set works in either game)
+  const BW = new URLSearchParams(location.search).get('g') === 'bw';
+  if (BW) {
+    document.body.classList.add('bw'); document.title = 'Death at Blackwood Hall · Printable evidence';
+    document.querySelector('.noprint h2').textContent = 'Printable evidence';
+    document.querySelector('.noprint p').innerHTML = 'Print this single sheet, then cut out the four evidence tags. Each has a <b>tab</b> at the bottom saying who hides it. <b>Don’t hide anything yet</b> — the game tells each of you when, and you tear the tab off as you hide the tag. (Cards printed for <i>The Last Recital</i> work in this game too.)';
+  }
+  const BW_NOTES = ['Case: Ashcombe. Handle with care.', 'Found at Blackwood Hall. Do not discuss.', 'Item recovered during the search of the house.', 'Exhibit for the inquest. Keep dry.'];
+  function tagClip() { return 'polygon(12% 0, 88% 0, 100% 9%, 100% 100%, 0 100%, 0 9%)'; }
+  function bwArt(r, code) {
+    const W = 360, H = 460;
+    const rot = -6 - r() * 8, sx = 112, sy = 432;
+    return `<svg class="art" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="180" cy="26" r="11" fill="#2a2420"/><circle cx="180" cy="26" r="15" fill="none" stroke="#8a6a3a" stroke-width="4"/>
+      <path d="M180 14 C 170 -10, 200 -20, 195 -40" stroke="#6a5a4a" stroke-width="2.5" fill="none"/>
+      ${[396].map((y) => `<line x1="40" x2="${W - 40}" y1="${y}" y2="${y}" stroke="#7a5a30" stroke-width=".8" opacity=".5"/>`).join('')}
+      <g class="stain" transform="rotate(${rot} ${sx} ${sy})" opacity=".55"><rect x="${sx - 62}" y="${sy - 15}" width="124" height="30" rx="3" fill="none" stroke="#9c2a22" stroke-width="3"/>
+      <text x="${sx}" y="${sy + 7}" text-anchor="middle" font-family="Cinzel, serif" font-weight="700" font-size="18" letter-spacing="3" fill="#9c2a22">EXHIBIT</text></g>
+    </svg>`;
+  }
   const NOTES = [
     '…should these pages be found, play them for me.',
     '…I hid them where only you would think to look.',
@@ -140,17 +164,17 @@
     const q = qrcode(0, 'Q'); q.addData(scanUrl(c.code)); q.make();
     const qr = q.createSvgTag({ cellSize: 8, margin: 24, scalable: true });
     return `<div class="card" data-code="${c.code}">
-      <div class="page" style="clip-path:${tornClip(r)}">
-        ${grain(i + 3)}${art(r, c.code)}
+      <div class="page" style="clip-path:${BW ? tagClip() : tornClip(r)}">
+        ${grain(i + 3)}${BW ? bwArt(r, c.code) : art(r, c.code)}
         <div class="content">
-          <div class="title">Requiem</div>
-          <div class="sub">A PAGE TORN FROM THE SCORE</div>
+          <div class="title">${BW ? 'Evidence' : 'Requiem'}</div>
+          <div class="sub">${BW ? 'SCOTLAND YARD · BLACKWOOD HALL' : 'A PAGE TORN FROM THE SCORE'}</div>
           <div class="cartouche">${qr}</div>
-          <div class="note">${NOTES[i % NOTES.length]}</div>
+          <div class="note">${BW ? BW_NOTES[i % BW_NOTES.length] : NOTES[i % NOTES.length]}</div>
         </div>
         <div class="catalog">No. <b>${c.code}</b></div>
       </div>
-      <div class="tab"><span class="cut">✂</span><span>HIDDEN BY <b>${who[c.hider]}</b> · PAGE ${c.slot}</span><small>tear off as you hide it</small></div>
+      <div class="tab"><span class="cut">✂</span><span>HIDDEN BY <b>${who[c.hider]}</b> · ${BW ? 'CARD' : 'PAGE'} ${c.slot}</span><small>tear off as you hide it</small></div>
     </div>`;
   }).join('');
   document.getElementById('inksaver').onchange = (e) => document.body.classList.toggle('inksaver', e.target.checked);

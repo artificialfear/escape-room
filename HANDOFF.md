@@ -23,6 +23,13 @@ A static GitHub Pages app. `index.html` is the TV/host and runs the game. `play.
 - `js/scenes.js` and `css/scenes.css` hold the SVG scenes (exterior, hallway, parlor, musicroom, attic, dawn), keyed by phase (`PHASE_SCENE`). They also hold the Eleanor ghost (`ghost(pos, ms, strength)` and `hideGhost(rise)`), transitions (`transition('ink'|'snuff', cb)`; the stage re-renders while the screen is covered), `lightning()`, `shimmer()` and `tension(0|1|2)`.
 - `tv.js` `render()` drives the transitions and `stageMoments()` drives Eleanor's beats. The game's sound events trigger the visual effects. `tests/scenes_test.py` screenshots every scene and effect.
 
+## Death at Blackwood Hall (v2.0) (⚠️ spoilers)
+- Files: `blackwood.html` (TV), `js/blackwood.js` (case generator, logic, documents, views), `js/tv-bw.js` (TV renderer, adapted from tv.js), `css/blackwood.css`, and the scenes manor, library, drawing, study and manordawn in `scenes.js`.
+- Engine changes: `Net.Host/Client` take a peer prefix (`Net.PREFIXES.bw`). The phone picks the game from `?g=bw`; scanned card links reuse `lr-last-game`. Views can now carry `labels` (wording), `reveals` (tap-to-examine), `tool:'cipher'`, and the widgets `time`, `multi` and `accuse` (propose/agree). `pages` entries can be `{title, html}` casebook cards.
+- `AudioBank` reads `window.AUDIO_EP`: 'bw' uses its own slots, IndexedDB and settings key, the `sounds/blackwood/` folder, and BroadcastChannel `bw-soundboard`. Blackwood sound effects borrow The Last Recital's files until replaced, except the Thunder slot. The soundboard page takes `?ep=bw`. `Sound.startRain()` provides the synth storm.
+- Case logic: there are 6 suspects with hand (L/R) and boot (S/L) traits. The killer K lied about the true time T, and the framed suspect F lied about 11:15 (the time on the smashed watch). Every innocent who shares K's traits gets a confirmed alibi at T, and at least one innocent can only be ruled out by traits. Evidence: the boot cast (Emily, hunt I), the bell-board log (Mat, hunt I), the weapon (Mat, hunt II) and the glove (Emily, hunt II). `/tmp`-style check: 5,000 generated cases each have a unique solution and no one is in two places at once (see the node check described in tests/blackwood_test.py notes).
+- Tests: `tests/blackwood_test.py` (full playthrough including a wrong time, wrong liars and a wrong accusation), `BW=1 tests/cards_test.py` (evidence tags scan).
+
 ## Testing
 `python3 tests/playthrough.py` plays the whole game with the TV and both phones in Playwright, using a fake PeerJS built on BroadcastChannel (`tests/fakepeer.js`). `tests/soundboard_test.py` covers the soundboard. Screenshots go to `tests/shots/`, which git ignores.
 

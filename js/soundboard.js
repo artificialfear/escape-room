@@ -26,7 +26,7 @@
   let playingSrc = null;
 
   function stopAll() {
-    AB.stopMusic(0.3); Sound.stopAmbient();
+    AB.stopMusic(0.3); Sound.stopAmbient(); Sound.stopRain && Sound.stopRain();
     if (playingSrc) { try { playingSrc.stop(); } catch (e) {} playingSrc = null; }
   }
 
@@ -52,7 +52,7 @@
     chip.className = 'chip';
     if (e && e.error) { chip.textContent = '⚠ ' + e.error + ': ' + e.name; chip.classList.add('err'); }
     else if (e && e.src === 'local') { chip.textContent = '✓ Your file: ' + e.name; chip.classList.add('local'); }
-    else if (e && e.src === 'repo') { chip.textContent = '✓ Repo file: ' + e.name; chip.classList.add('repo'); }
+    else if (e && e.src === 'repo') { chip.textContent = (e.borrowed ? '↻ Borrowed: ' : '✓ Repo file: ') + e.name; chip.classList.add('repo'); }
     else chip.textContent = BUILTIN[slot.id].text;
     chip.title = chip.textContent;
     $('[data-del]', row).style.display = e && e.src === 'local' ? '' : 'none';
@@ -119,6 +119,15 @@
   window.addEventListener('dragover', (e) => e.preventDefault());
   window.addEventListener('drop', (e) => e.preventDefault());
 
+  if (AB.EP === 'bw') {
+    document.title = 'Death at Blackwood Hall · Soundboard';
+    $('#epname').textContent = '· Death at Blackwood Hall';
+    $('#folder1').textContent = 'sounds/blackwood/'; $('#folder2').textContent = 'sounds/blackwood/music_act1.mp3';
+    BUILTIN.music_title = { text: 'Built-in: rain', play: () => Sound.startRain && Sound.startRain() };
+    ['music_hiding', 'music_act1', 'music_act2', 'music_act3'].forEach((k) => (BUILTIN[k] = { text: 'Built-in: rain + low drone', play: () => { Sound.startRain && Sound.startRain(); Sound.startAmbient(0.6); } }));
+    BUILTIN.music_ending = { text: 'Built-in: silence' };
+    BUILTIN.sfx_house1 = BUILTIN.sfx_house2 = BUILTIN.sfx_house3 = { text: 'Built-in: thunder', play: () => Sound.thunder(0.5) };
+  } else $('#epname').textContent = '· The Last Recital';
   build();
   AB.loadAll().then(() => AB.SLOTS.forEach(refresh));
 })();

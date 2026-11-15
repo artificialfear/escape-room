@@ -175,7 +175,7 @@
             <button class="btn small" id="newgame">New game (fresh puzzles)</button>
           </div>
           <div class="testbox"><div>Systems check: on each phone, tap <b>Test camera</b> and point it at one of the printed pages, <b>Test microphone</b> and hum, and <b>Test TV sound</b>. These checks reveal nothing about the game.</div></div>
-          <div class="note-sm">When you’re both joined and ready, tap <b>We’re ready</b> on your phones.</div>
+          <div class="note-sm">When you’re both joined and ready, tap <b>We’re ready</b> on your phones. · <a href="blackwood.html" style="color:var(--dim)">Another case: Death at Blackwood Hall →</a></div>
         </div>
         <div style="text-align:center">
           <div class="join"><div class="qr">${qrSVG(joinUrl, 6)}</div><div class="code">Scan to join · ${room}</div></div>

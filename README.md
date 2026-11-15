@@ -16,3 +16,6 @@ You need: the laptop and both phones on the same Wi-Fi, the volume up on all dev
 
 ## Custom music & sound effects
 Open **Soundboard** from the TV's join screen and drag audio files onto the slots. Files are saved in that browser. To make them permanent, upload them to `sounds/` named after the slot ID.
+
+## Second game: Death at Blackwood Hall
+A Victorian murder mystery for two (an Inspector and a Doctor, each with different evidence). Open **https://artificialfear.github.io/escape-room/blackwood.html** on the laptop and follow the same steps. Print the evidence tags from its join screen; cards printed for *The Last Recital* work too. Its soundboard is at `soundboard.html?ep=bw`, and its files go in `sounds/blackwood/`.

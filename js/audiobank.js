@@ -3,7 +3,8 @@
 //   1. Files added on the Soundboard page (stored in this browser's IndexedDB on this computer)
 //   2. Files in the repo's sounds/ folder named <slot id>.mp3 / .m4a / .ogg / .wav
 (function () {
-  const SLOTS = [
+  const EP = window.AUDIO_EP || 'lr'; // which game: 'lr' The Last Recital, 'bw' Death at Blackwood Hall
+  const SLOTS_LR = [
     { id: 'music_title', kind: 'music', loop: true, label: 'Title music', desc: 'Plays on the join screen before the game starts. Mysterious, inviting. Loops. (Built-in: silence.)' },
     { id: 'music_hiding', kind: 'music', loop: true, label: 'Hiding music', desc: 'Plays while each of you hides your pages. Sneaky, tiptoeing tension. Loops.' },
     { id: 'music_act1', kind: 'music', loop: true, label: 'Act I background', desc: 'Underscore for the first third of the game. Dark, sparse, eerie. Loops. Keep it quiet and not too busy, since you’ll be reading and talking over it.' },
@@ -24,9 +25,31 @@
     { id: 'sfx_house3', kind: 'sfx', label: 'House noise 3', desc: 'Another random house noise, for variety.' },
     { id: 'sfx_test', kind: 'sfx', label: 'TV sound test', desc: 'Played when a phone taps “Test TV sound” in the lobby.' },
   ];
+  const SLOTS_BW = [
+    { id: 'music_title', kind: 'music', loop: true, label: 'Title music', desc: 'Join screen. A grand old house on a stormy night; mystery and intrigue. Loops. (Built-in: rain.)' },
+    { id: 'music_hiding', kind: 'music', loop: true, label: 'Hiding music', desc: 'While each of you hides the evidence cards. Sneaky, tiptoeing. Loops.' },
+    { id: 'music_act1', kind: 'music', loop: true, label: 'Act I background', desc: 'The first third: the scene of the crime. Grave and tense, quiet enough to talk over. Loops.' },
+    { id: 'music_act2', kind: 'music', loop: true, label: 'Act II background', desc: 'The middle third: questioning the household. Suspicious intrigue, a little brisker. Loops.' },
+    { id: 'music_act3', kind: 'music', loop: true, label: 'Act III background', desc: 'The final third: closing in. Building suspense. Loops.' },
+    { id: 'music_ending', kind: 'music', loop: false, label: 'Ending music', desc: 'Case closed. Satisfying resolution, a touch melancholy. Plays once, a few seconds into the ending.' },
+    { id: 'sfx_transition', kind: 'sfx', label: 'Scene change', desc: 'As new scenes begin: a door creak, footsteps, or a roll of thunder. About 2 seconds.' },
+    { id: 'sfx_solve', kind: 'sfx', label: 'Clue solved', desc: 'A satisfying “aha!” sting, 1–3 seconds.' },
+    { id: 'sfx_climax', kind: 'sfx', label: 'Case solved', desc: 'Naming the killer correctly. A big dramatic sting, 3–6 seconds.' },
+    { id: 'sfx_wrong', kind: 'sfx', label: 'Wrong answer', desc: 'Wrong answer or wrong accusation. A low, ominous thud, under 1 second.' },
+    { id: 'sfx_progress', kind: 'sfx', label: 'Small progress', desc: 'When one of you finishes your part of something. A soft tick or chime.' },
+    { id: 'sfx_page', kind: 'sfx', label: 'Evidence found', desc: 'Plays on the TV when someone finds hidden evidence. Paper rustle or a clue sting, about 2 seconds.' },
+    { id: 'sfx_hint', kind: 'sfx', label: 'Hint appears', desc: 'A pencil scribble or page turn when a hint shows on the TV. 1–2 seconds.' },
+    { id: 'sfx_heartbeat', kind: 'sfx', label: 'Tension', desc: 'Tense moments, like just before the accusation. A heartbeat or low pulse.' },
+    { id: 'sfx_house1', kind: 'sfx', noBorrow: true, label: 'Thunder', desc: 'Thunder, played with every lightning flash (at random, and on wrong answers). 2–5 seconds.' },
+    { id: 'sfx_house2', kind: 'sfx', label: 'Storm noise 2', desc: 'Another random noise: wind gusting, a window rattling.' },
+    { id: 'sfx_house3', kind: 'sfx', label: 'Storm noise 3', desc: 'Another random noise: a creaking floorboard or a clock chiming in the hall.' },
+    { id: 'sfx_test', kind: 'sfx', label: 'TV sound test', desc: 'Played when a phone taps “Test TV sound” in the lobby.' },
+  ];
+  const SLOTS = EP === 'bw' ? SLOTS_BW : SLOTS_LR;
+  const FOLDER = EP === 'bw' ? 'sounds/blackwood' : 'sounds';
   const EXTS = ['mp3', 'm4a', 'ogg', 'wav'];
-  const SET_KEY = 'lr-sound-settings';
-  const DB = 'lr-sounds', STORE = 'files';
+  const SET_KEY = EP === 'bw' ? 'bw-sound-settings' : 'lr-sound-settings';
+  const DB = EP === 'bw' ? 'bw-sounds' : 'lr-sounds', STORE = 'files';
 
   // ---------- settings ----------
   let settings = { music: 0.6, sfx: 1, vol: {} };
@@ -51,27 +74,31 @@
   const delLocal = (id) => tx('readwrite', (s) => s.delete(id));
 
   // List the repo's sounds/ folder once (GitHub API on the live site; sounds/manifest.json as a fallback).
-  let listing = null;
-  function repoListing() {
-    if (listing) return listing;
-    listing = (async () => {
+  const listings = {};
+  function repoListing(folder = FOLDER) {
+    if (listings[folder]) return listings[folder];
+    return (listings[folder] = (async () => {
       const names = new Set();
       const m = location.hostname.match(/^([^.]+)\.github\.io$/);
       const repo = location.pathname.split('/').filter(Boolean)[0];
       if (m && repo) {
         try {
-          const r = await fetch(`https://api.github.com/repos/${m[1]}/${repo}/contents/sounds`, { cache: 'no-cache' });
+          const r = await fetch(`https://api.github.com/repos/${m[1]}/${repo}/contents/${folder}`, { cache: 'no-cache' });
           if (r.ok) { (await r.json()).forEach((f) => f.type === 'file' && names.add(f.name)); return names; }
         } catch (e) {}
       }
-      try { const r = await fetch('sounds/manifest.json', { cache: 'no-cache' }); if (r.ok) (await r.json()).forEach((n) => names.add(n)); } catch (e) {}
+      try { const r = await fetch(`${folder}/manifest.json`, { cache: 'no-cache' }); if (r.ok) (await r.json()).forEach((n) => names.add(n)); } catch (e) {}
       return names;
-    })();
-    return listing;
+    })());
   }
-  async function probeRepo(id) {
+  async function probeRepo(id, kind) {
     const names = await repoListing();
-    for (const ext of EXTS) if (names.has(`${id}.${ext}`)) return { url: `sounds/${id}.${ext}`, name: `${id}.${ext}` };
+    for (const ext of EXTS) if (names.has(`${id}.${ext}`)) return { url: `${FOLDER}/${id}.${ext}`, name: `${id}.${ext}` };
+    // Blackwood borrows The Last Recital's sound effects until you give it its own
+    if (EP === 'bw' && kind === 'sfx' && !(SLOTS.find((x) => x.id === id) || {}).noBorrow) {
+      const lr = await repoListing('sounds');
+      for (const ext of EXTS) if (lr.has(`${id}.${ext}`)) return { url: `sounds/${id}.${ext}`, name: `${id}.${ext} (from The Last Recital)`, borrowed: true };
+    }
     return null;
   }
 
@@ -84,7 +111,7 @@
     delete bank[slot.id];
     let entry = null;
     try { const loc = await getLocal(slot.id); if (loc && loc.blob) entry = { src: 'local', url: URL.createObjectURL(loc.blob), name: loc.name }; } catch (e) {}
-    if (!entry) { const rep = await probeRepo(slot.id); if (rep) entry = Object.assign({ src: 'repo' }, rep); }
+    if (!entry) { const rep = await probeRepo(slot.id, slot.kind); if (rep) entry = Object.assign({ src: 'repo' }, rep); }
     if (!entry) return null;
     if (slot.kind === 'sfx') {
       try { const ab = await (await fetch(entry.url)).arrayBuffer(); entry.buffer = await Sound.ctx().decodeAudioData(ab); }
@@ -94,7 +121,7 @@
     return entry;
   }
   async function loadAll() {
-    try { const r = await fetch('sounds/loops.json', { cache: 'no-cache' }); if (r.ok) loopInfo = await r.json(); } catch (e) {}
+    try { const r = await fetch(`${FOLDER}/loops.json`, { cache: 'no-cache' }); if (r.ok) loopInfo = await r.json(); } catch (e) {}
     await Promise.all(SLOTS.map(loadSlot));
     ready = true; readyFns.splice(0).forEach((f) => f());
   }
@@ -115,7 +142,7 @@
   let cur = null; // { id, src, gain, token }
   let duckLevel = 1;
   function musicLevel(id) { return settings.music * slotVol(id) * duckLevel; }
-  function loopFor(id) { const e = bank[id]; return e && e.src === 'repo' ? loopInfo[id] || null : null; }
+  function loopFor(id) { const e = bank[id]; return e && e.src === 'repo' && !e.borrowed ? loopInfo[id] || null : null; }
   function decodeMusic(id) {
     const e = bank[id];
     if (!e.bufP) e.bufP = fetch(e.url).then((r) => r.arrayBuffer()).then((ab) => Sound.ctx().decodeAudioData(ab));
@@ -160,7 +187,7 @@
   // Live updates from the Soundboard page (same computer, same browser)
   let chan = null;
   try {
-    chan = new BroadcastChannel('lr-soundboard');
+    chan = new BroadcastChannel(EP + '-soundboard');
     chan.onmessage = async (e) => {
       const m = e.data || {};
       if (m.t === 'settings') { try { Object.assign(settings, JSON.parse(localStorage.getItem(SET_KEY) || '{}')); } catch (err) {} setDuck(duckLevel); }
@@ -169,5 +196,5 @@
   } catch (e) {}
   function announce(msg) { try { chan && chan.postMessage(msg); } catch (e) {} }
 
-  window.AudioBank = { announce, loopFor, SLOTS, settings, saveSettings, slotVol, loadAll, loadSlot, onReady, has, bank, sfx, music, stopMusic, setDuck, playingId, putLocal, delLocal };
+  window.AudioBank = { EP, FOLDER, announce, loopFor, SLOTS, settings, saveSettings, slotVol, loadAll, loadSlot, onReady, has, bank, sfx, music, stopMusic, setDuck, playingId, putLocal, delLocal };
 })();

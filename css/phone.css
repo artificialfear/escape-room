@@ -121,3 +121,26 @@ footer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: fle
 #pausedov p { font-style: italic; margin: .4em 0 1.4em; }
 #lostov { position: fixed; left: 0; right: 0; top: 0; z-index: 16; padding: calc(.7em + env(safe-area-inset-top)) 1em .7em; background: rgba(90,50,10,.96); border-bottom: 1px solid var(--gold); color: #ffe9c2; font-size: .9em; text-align: center; }
 #lostov span { display: block; font-size: .85em; opacity: .85; }
+
+/* casebook / evidence cards */
+.evcard { background: #efe3c6; color: #2a2016; border-radius: 4px; padding: .7em .9em; margin: .7em 0; box-shadow: 0 0 20px rgba(0,0,0,.5), inset 0 0 25px rgba(120,80,30,.3); line-height: 1.4; font-size: .95em; }
+.evcard .ev-t { font-family: "Cinzel", serif; font-weight: 700; font-size: .85em; letter-spacing: .08em; color: #6b3b20; margin-bottom: .3em; }
+.evcard ul { margin: .2em 0; padding-left: 1.1em; } .evcard li { margin: .25em 0; }
+.evcard table { border-collapse: collapse; width: 100%; font-size: .92em; } .evcard td { padding: .2em .3em; border-bottom: 1px dotted #b9a27c; vertical-align: top; }
+.doc { background: #efe3c6; color: #2a2016; border-radius: 4px; padding: .7em .9em; line-height: 1.45; box-shadow: inset 0 0 25px rgba(120,80,30,.3); }
+.doc h4 { font-family: "Cinzel", serif; margin: .2em 0 .4em; color: #6b3b20; font-size: .9em; letter-spacing: .06em; }
+.doc ul { margin: .2em 0; padding-left: 1.1em; } .doc li { margin: .3em 0; }
+.doc .torn { font-style: italic; } .doc .torn div { border-bottom: 1px dotted #b9a27c; padding: .25em 0; }
+.reveals { margin: .6em 0; }
+.rv { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: .75em .9em; margin-top: .45em; border-radius: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.04); font-family: "Cinzel", serif; font-size: .9em; }
+.rv i { font-family: "Fell", serif; color: var(--dim); font-size: .85em; } .rv.open { border-color: var(--ghost); } .rv.open i { visibility: hidden; }
+.rv-body { padding: .6em .9em; border-left: 2px solid var(--ghost); margin: .2em 0 .2em .3em; line-height: 1.45; }
+.timepick { display: flex; gap: .4em; align-items: center; justify-content: center; } .timepick select { width: auto; font-family: "Cinzel", serif; font-size: 1.4em; text-align: center; } .timepick span { font-size: 1.6em; }
+.multi .mopt { display: flex; align-items: center; gap: .7em; padding: .55em .2em; border-bottom: 1px solid var(--line); font-size: 1.05em; }
+.multi input { width: 1.3em; height: 1.3em; accent-color: var(--gold); }
+.cipher .cw-row { display: flex; align-items: center; justify-content: center; gap: 1em; margin: .4em 0; font-family: "Cinzel", serif; }
+.cipher .b { width: 2.4em; height: 2.4em; border-radius: 50%; border: 1px solid var(--gold); background: none; color: var(--gold2); font-size: 1.2em; }
+.cw-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 2px; text-align: center; font-family: "Cinzel", serif; }
+.cw-grid div { display: flex; flex-direction: column; background: rgba(255,255,255,.04); border-radius: 4px; padding: .15em 0; }
+.cw-grid b { color: var(--dim); font-size: .8em; } .cw-grid span { color: var(--gold2); font-size: .95em; }
+.cipher-text { font-family: "Cinzel", serif; letter-spacing: .25em; font-size: 1.15em; line-height: 1.8; word-spacing: .5em; }

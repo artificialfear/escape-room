@@ -38,13 +38,13 @@
 <body>
 <div class="fog"></div><div class="vignette"></div>
 <div class="wrap">
-  <h1 class="cinzel">Soundboard</h1>
+  <h1 class="cinzel">Soundboard <span id="epname" style="font-size:.5em;color:var(--dim)"></span></h1>
   <div class="intro">
     <p>Give the game your own music and sound effects. <b>Drag an audio file onto a slot</b> (or click <b>Choose file</b>). If you leave a slot empty, the game keeps its built-in sound. mp3, m4a, ogg and wav files all work.</p>
     <p>Changes take effect right away, even in a game tab that’s already open. Nothing here reveals any puzzles.</p>
   </div>
   <div class="note">
-    <b>Where files are kept:</b> files you add here are saved <b>in this browser on this computer</b>, so open the game from the same Chrome on the same Mac. To make a sound permanent and portable instead, upload it to the repo’s <code>sounds/</code> folder named exactly like the slot ID (for example <code>sounds/music_act1.mp3</code>). If both exist, the file added here wins.<br>
+    <b>Where files are kept:</b> files you add here are saved <b>in this browser on this computer</b>, so open the game from the same Chrome on the same Mac. To make a sound permanent and portable instead, upload it to the repo’s <code id="folder1">sounds/</code> folder named exactly like the slot ID (for example <code id="folder2">sounds/music_act1.mp3</code>). If both exist, the file added here wins.<br>
     A few musical sounds are generated live because the game randomizes them each time, so they can’t be replaced.
   </div>
   <div class="masters">
@@ -58,6 +58,7 @@
   <h2 class="cinzel">SOUND EFFECTS</h2>
   <div id="sfx"></div>
 </div>
+<script>window.AUDIO_EP = new URLSearchParams(location.search).get('ep') || 'lr';</script>
 <script src="js/sound.js"></script>
 <script src="js/audiobank.js"></script>
 <script src="js/soundboard.js"></script>

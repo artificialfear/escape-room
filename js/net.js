@@ -5,8 +5,8 @@
   const PEER_OPTS = { debug: 1 };
 
   class Host {
-    constructor(code, handlers) {
-      this.code = code;
+    constructor(code, handlers, prefix) {
+      this.code = code; this.prefix = prefix || PREFIX;
       this.h = handlers; // {onMessage(conn,msg), onClose(conn), onStatus(text, ok)}
       this.conns = new Set();
       this.start();
@@ -14,7 +14,7 @@
     start() {
       if (this.peer) { try { this.peer.destroy(); } catch (e) {} }
       this.h.onStatus('Opening the house…', false);
-      const peer = new Peer(PREFIX + this.code, PEER_OPTS);
+      const peer = new Peer(this.prefix + this.code, PEER_OPTS);
       this.peer = peer;
       peer.on('open', () => this.h.onStatus('Ready', true));
       peer.on('connection', (conn) => {
@@ -42,8 +42,8 @@
   }
 
   class Client {
-    constructor(code, handlers) {
-      this.code = code;
+    constructor(code, handlers, prefix) {
+      this.code = code; this.prefix = prefix || PREFIX;
       this.h = handlers; // {onMessage(msg), onStatus(connected:boolean, text)}
       this.lastPong = 0;
       this.connected = false;
@@ -71,7 +71,7 @@
       if (this.peer.disconnected) { try { this.peer.reconnect(); } catch (e) {} return; }
       if (this.conn) { try { this.conn.close(); } catch (e) {} }
       this.setStatus(false, 'Connecting…');
-      const conn = this.peer.connect(PREFIX + this.code, { reliable: true, serialization: 'json' });
+      const conn = this.peer.connect(this.prefix + this.code, { reliable: true, serialization: 'json' });
       this.conn = conn;
       conn.on('open', () => {
         if (conn !== this.conn) return;
@@ -108,5 +108,7 @@
     send(msg) { if (this.conn && this.conn.open) { try { this.conn.send(msg); return true; } catch (e) {} } return false; }
   }
 
-  window.Net = { Host, Client, PREFIX };
+  // each game has its own id space so the two games never collide
+  const PREFIXES = { lr: PREFIX, bw: 'blackwood-v1-' };
+  window.Net = { Host, Client, PREFIX, PREFIXES };
 })();

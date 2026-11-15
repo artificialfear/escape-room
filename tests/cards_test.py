@@ -20,7 +20,7 @@ with sync_playwright() as p:
     for mode in ['normal', 'inksaver']:
         pg = b.new_page(device_scale_factor=2) if False else b.new_page()
         pg.set_viewport_size({'width': 900, 'height': 1250})
-        pg.goto('http://127.0.0.1:8773/cards.html'); pg.wait_for_timeout(800)
+        pg.goto('http://127.0.0.1:8773/cards.html' + ('?g=bw' if os.environ.get('BW') else '')); pg.wait_for_timeout(800)
         pg.add_script_tag(path=os.path.join(ROOT, 'lib', 'jsQR.js'))
         if mode == 'inksaver': pg.check('#inksaver')
         pg.screenshot(path=os.path.join(SHOTS, f'cards-{mode}.png'), full_page=True)
@@ -34,7 +34,7 @@ with sync_playwright() as p:
                 ok &= got == 'LR-' + code
             print(mode, code, ' '.join(res), '(clean, half-res, 35%+blur, dim+blur)')
     pg.uncheck('#inksaver'); pg.emulate_media(media='print'); pg.wait_for_timeout(200)
-    pg.pdf(path='/tmp/cards.pdf', format='Letter', print_background=True)
+    pg.pdf(path='/tmp/cards' + ('-bw' if os.environ.get('BW') else '') + '.pdf', format='Letter', print_background=True)
     b.close()
 srv.shutdown()
 print('PASS' if ok else 'FAIL')

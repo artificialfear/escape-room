@@ -1,0 +1,21 @@
+/* Death at Blackwood Hall — TV extras */
+.scene-title.compact { font-size: 2em; margin-bottom: .1em; }
+.badges { display: flex; gap: 6vw; justify-content: center; }
+.badge { width: 11em; padding: 1.2em 1em; border: 1px solid var(--line); border-radius: 10px; background: var(--card); text-align: center; transition: all .4s; }
+.badge.held { border-color: var(--gold); box-shadow: 0 0 40px rgba(217,164,65,.35); }
+.bd-ico { font-size: 2em; color: var(--gold2); } .bd-t { font-family: "Cinzel", serif; letter-spacing: .2em; color: var(--dim); font-size: .8em; margin-top: .3em; }
+.bd-n { font-family: "Cinzel", serif; font-size: 1.3em; color: var(--ink); } .bd-s { font-style: italic; color: var(--dim); }
+.bodyvis { display: flex; align-items: center; gap: 5vw; justify-content: center; } .bodyvis .cap { font-style: italic; color: var(--dim); font-size: .85em; }
+.plaque { border: 1px solid var(--gold); padding: 1em 1.6em; border-radius: 6px; background: rgba(20,14,10,.8); font-style: italic; color: var(--dim); }
+.plaque b { display: block; font-family: "Cinzel", serif; font-style: normal; font-size: 2.2em; color: var(--gold2); margin: .1em 0; }
+.evtag { width: 7em; height: 9em; border-radius: 6px 6px 6px 6px; background: rgba(214,190,140,.08); border: 1px dashed var(--line); display: flex; align-items: center; justify-content: center; color: var(--dim); font-family: "Cinzel", serif; position: relative; transition: all .8s; }
+.evtag::before { content: ''; position: absolute; top: .6em; left: 50%; width: .7em; height: .7em; margin-left: -.35em; border-radius: 50%; border: 2px solid var(--line); }
+.evtag.found { background: #d8c08e; color: #3a2a1a; border: 0; box-shadow: 0 0 40px rgba(243,200,103,.35); }
+.suspects { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8em 1.4em; width: min(70em, 92vw); }
+.suspect { display: grid; grid-template-columns: 3.2em 1fr; grid-template-rows: auto auto auto; column-gap: .8em; text-align: left; background: rgba(20,15,22,.82); border: 1px solid var(--line); border-radius: 8px; padding: .55em .8em; font-size: .78em; transition: all .4s; }
+.suspect.accused { border-color: var(--blood); box-shadow: 0 0 30px rgba(156,52,52,.5); }
+.sp-face { grid-row: 1 / span 3; width: 3.2em; height: 3.8em; border-radius: 50% / 42%; border: 3px solid #8a6a2e; background: radial-gradient(ellipse at 50% 35%, #3b3340, #15121a 70%); display: flex; align-items: center; justify-content: center; color: rgba(234,223,198,.35); font-size: 1.1em; }
+.sp-name { font-family: "Cinzel", serif; color: var(--gold2); font-size: 1.05em; } .sp-role { font-style: italic; color: var(--dim); font-size: .9em; }
+.sp-st { grid-column: 2; margin-top: .3em; line-height: 1.35; } .sp-st b { font-family: "Cinzel", serif; font-size: .8em; color: var(--ghost); margin-right: .3em; }
+.weapons { display: flex; gap: 1.4em; justify-content: center; margin-top: 1em; font-family: "Cinzel", serif; font-size: .8em; color: var(--dim); } .weapons span { border: 1px solid var(--line); border-radius: 20px; padding: .3em 1em; }
+.proposal { margin-top: 1em; min-height: 1.5em; font-size: 1em; } .wrongmsg { color: #e9a090; font-style: italic; }

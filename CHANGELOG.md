@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0 — 2026-11-15
+- New game: **Death at Blackwood Hall** (`blackwood.html`), a Victorian murder mystery on a stormy night. One phone is the Inspector and the other is the Doctor, each with different evidence and a casebook that builds up over the game. Every new case randomizes the killer, the weapon, the time of death and the clues. Includes printable evidence tags, its own soundboard, storm scenes (manor, library, drawing room, study), a case reconstruction, and a Scotland Yard case file with a detective rating.
+- The Last Recital is unchanged apart from a small link to the new game on its join screen.
+
 ## 1.8 — 2026-11-15
 - Opening: the TV starts on the sleeping house with its lights out. “Wake the house” brings thunder and a lightning flash, the windows flicker on one by one, the title music begins, and the join screen fades in.
 - Ending: after the epilogue, the TV shows the evening's concert program, with each scene's time, hints (♪), skips, total performance time and a critic's star rating (Tone-Deaf Intruder → Maestro). The phones show the rating too.

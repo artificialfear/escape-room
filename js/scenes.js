@@ -213,7 +213,151 @@
     </svg>`;
   }
 
-  const SCENES = { exterior: () => exterior(false), dawn: () => exterior(true), hallway, parlor, musicroom, attic };
+
+  // ---------- Death at Blackwood Hall ----------
+  function rainSheet(n, x0, x1, op) {
+    let o = ''; for (let i = 0; i < n; i++) { const x = x0 + rnd() * (x1 - x0), y = rnd() * 900; o += `<line x1="${x.toFixed(0)}" y1="${y.toFixed(0)}" x2="${(x - 9).toFixed(0)}" y2="${(y + 34).toFixed(0)}" stroke="#a9bccf" stroke-width="1.1" opacity="${(op * (.4 + rnd() * .6)).toFixed(2)}"/>`; }
+    return `<g class="rain">${o}</g><g class="rain r2" style="transform:translateY(-900px)">${o}</g>`;
+  }
+  function bareTree(x, base, h, flip) {
+    const m = flip ? -1 : 1; let o = `<path d="M${x - 14} ${base} C ${x - 10} ${base - h * .4}, ${x - 6} ${base - h * .7}, ${x} ${base - h} L ${x + 8} ${base - h} C ${x + 10} ${base - h * .6}, ${x + 14} ${base - h * .3}, ${x + 20} ${base} Z" fill="#06050a"/>`;
+    const branch = (bx, by, len, ang, w, d) => {
+      if (d > 4 || len < 14) return '';
+      const ex = bx + Math.cos(ang) * len * m, ey = by - Math.sin(ang) * len;
+      let b = `<line x1="${bx.toFixed(0)}" y1="${by.toFixed(0)}" x2="${ex.toFixed(0)}" y2="${ey.toFixed(0)}" stroke="#06050a" stroke-width="${w.toFixed(1)}" stroke-linecap="round"/>`;
+      b += branch(ex, ey, len * .68, ang + .45 + rnd() * .3, w * .62, d + 1);
+      b += branch(ex, ey, len * .62, ang - .4 - rnd() * .3, w * .6, d + 1);
+      return b;
+    };
+    o += `<g class="sway slow" style="transform-origin:${x}px ${base - h}px">` + branch(x + 4, base - h * .85, h * .5, 1.2, 9, 0) + branch(x + 4, base - h * .7, h * .42, .55, 7, 1) + branch(x + 4, base - h * .6, h * .4, 2.3, 7, 1) + '</g>';
+    return o;
+  }
+  function manor(dawn) {
+    rs(61);
+    const sky = dawn
+      ? `<linearGradient id="bsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a3346"/><stop offset=".55" stop-color="#7d7d88"/><stop offset=".85" stop-color="#d8b98e"/><stop offset="1" stop-color="#efd3a2"/></linearGradient>`
+      : `<linearGradient id="bsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#05060a"/><stop offset=".6" stop-color="#10131c"/><stop offset="1" stop-color="#1a1d27"/></linearGradient>`;
+    const body = dawn ? '#1c1a22' : '#0a090e', winC = dawn ? '#3a3a44' : '#131824';
+    let wins = '';
+    const W1 = [[470, 470], [540, 470], [610, 470], [990, 470], [1060, 470], [1130, 470], [470, 560], [540, 560], [1060, 560], [1130, 560], [760, 400], [840, 400], [800, 300]];
+    W1.forEach(([x, y], i) => {
+      const on = !dawn && [2, 4, 10, 12].includes(i);
+      wins += `<path d="M${x} ${y + 60} V${y + 14} Q ${x + 17} ${y - 6} ${x + 34} ${y + 14} V${y + 60} Z" fill="${on ? '#e3a04c' : winC}" ${on ? 'class="flick-win"' : ''}/><path d="M${x + 17} ${y + 4} V${y + 60}" stroke="${body}" stroke-width="3"/>`;
+      if (on) wins += `<circle class="flick" cx="${x + 17}" cy="${y + 34}" r="80" fill="url(#glow)"/>`;
+    });
+    const gables = [[420, 660, 300], [940, 1180, 300]].map(([a, b, top]) => `<polygon points="${a - 10},${450} ${(a + b) / 2},${top} ${b + 10},${450}" fill="${body}"/>`).join('');
+    let crenel = ''; for (let x = 712; x < 890; x += 26) crenel += `<rect x="${x}" y="226" width="14" height="18" fill="${body}"/>`;
+    const chim = [470, 610, 990, 1130].map((x) => `<rect x="${x}" y="${268 + (x % 3) * 6}" width="26" height="70" fill="${body}"/>`).join('');
+    let gate = ''; for (let x = 0; x < W; x += 30) gate += `<path d="M${x} 880 V 790 l 5 -12 l 5 12 V 880" fill="#040306"/>`;
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs>${defs}${sky}
+      <radialGradient id="dsun" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff0c8" stop-opacity=".9"/><stop offset="1" stop-color="#ffcf8a" stop-opacity="0"/></radialGradient></defs>
+      <rect width="${W}" height="${H}" fill="url(#bsky)"/>
+      ${dawn ? '<circle cx="360" cy="700" r="380" fill="url(#dsun)"/>' : '<rect class="lightning-sky" width="1600" height="900" fill="#cfdcff" opacity="0"/>'}
+      ${clouds(dawn ? '#5a5a66' : 'url(#cloud)', dawn ? 160 : 40)}${dawn ? '' : clouds('url(#cloud)', 160)}
+      <path d="M0 640 Q 200 590 420 625 T 860 610 T 1260 630 T 1600 600 V900 H0Z" fill="${dawn ? '#24222a' : '#08080d'}"/>
+      <g>
+        <rect x="400" y="440" width="800" height="300" fill="${body}"/>
+        ${gables}
+        <rect x="700" y="240" width="200" height="500" fill="${body}"/>${crenel}
+        ${chim}
+        ${wins}
+        <path d="M770 740 V650 Q 800 620 830 650 V740 Z" fill="#050407"/>
+        <rect x="740" y="736" width="120" height="10" fill="${body}"/>
+      </g>
+      ${bareTree(150, 800, 420, false)}${bareTree(1450, 800, 400, true)}
+      <rect y="780" width="${W}" height="120" fill="${dawn ? '#121016' : '#040306'}"/>
+      <path d="M700 900 L 780 780 L 820 780 L 900 900 Z" fill="${dawn ? '#2a2630' : '#0d0c12'}"/>
+      ${gate}
+      ${dawn ? '' : rainSheet(240, 0, 1600, .45)}
+    </svg>`;
+  }
+  function bookshelf(x0, x1, top, bottom) {
+    let o = `<rect x="${x0}" y="${top}" width="${x1 - x0}" height="${bottom - top}" fill="#120b08"/>`;
+    const cols = ['#3a1a14', '#22301f', '#2b2238', '#4a3418', '#1d2633', '#3d2c22', '#2a1a10'];
+    for (let y = top + 16; y < bottom - 10; y += 92) {
+      o += `<rect x="${x0}" y="${y + 74}" width="${x1 - x0}" height="8" fill="#2a1a10"/>`;
+      let x = x0 + 8;
+      while (x < x1 - 14) {
+        const w = 9 + rnd() * 14, h = 48 + rnd() * 24;
+        if (rnd() < .08) { o += `<rect x="${x}" y="${y + 74 - h * .8}" width="${h * .8}" height="${w}" fill="${cols[(rnd() * cols.length) | 0]}" opacity=".9" transform="rotate(${-8} ${x} ${y + 74})"/>`; x += h * .6; continue; }
+        o += `<rect x="${x.toFixed(0)}" y="${(y + 74 - h).toFixed(0)}" width="${w.toFixed(0)}" height="${h.toFixed(0)}" fill="${cols[(rnd() * cols.length) | 0]}" opacity=".85"/>`;
+        if (rnd() < .5) o += `<rect x="${x.toFixed(0)}" y="${(y + 74 - h + 8).toFixed(0)}" width="${w.toFixed(0)}" height="2" fill="#b08a4a" opacity=".35"/>`;
+        x += w + 1;
+      }
+    }
+    return o;
+  }
+  function stormWindow(x, y, w, h) {
+    const id = 'sw' + Math.floor(x);
+    return `<defs><clipPath id="${id}"><rect x="${x}" y="${y}" width="${w}" height="${h}"/></clipPath></defs>
+      <g clip-path="url(#${id})"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#0f1726"/><rect class="lightning-sky" x="${x}" y="${y}" width="${w}" height="${h}" fill="#cfdcff" opacity="0"/>${rainSheet(60, x, x + w, .7)}</g>
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="#08060a" stroke-width="14"/><path d="M${x + w / 2} ${y} V${y + h} M${x} ${y + h / 3} H${x + w} M${x} ${y + 2 * h / 3} H${x + w}" stroke="#08060a" stroke-width="8"/>`;
+  }
+  function library() {
+    rs(71);
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs>${defs}
+      <radialGradient id="lamp" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#d8f0c8" stop-opacity=".45"/><stop offset="1" stop-color="#a8d098" stop-opacity="0"/></radialGradient></defs>
+      <rect width="${W}" height="${H}" fill="#0c0809"/>
+      ${bookshelf(0, 470, 40, 740)}${bookshelf(1130, 1600, 40, 740)}
+      <rect x="470" y="0" width="660" height="740" fill="#120c10"/>
+      ${stormWindow(640, 90, 320, 420)}
+      <path d="M600 70 C 640 300, 590 500, 630 740 L 560 740 C 570 500, 540 300, 560 70 Z" fill="#3a0f16"/>
+      <path d="M1000 70 C 960 300, 1010 500, 970 740 L 1040 740 C 1030 500, 1060 300, 1040 70 Z" fill="#3a0f16"/>
+      <rect x="540" y="60" width="520" height="16" fill="#3a2414"/>
+      <rect y="740" width="${W}" height="160" fill="#0a0607"/>
+      <ellipse cx="800" cy="830" rx="520" ry="56" fill="#2a1016" opacity=".55"/>
+      <!-- desk with banker's lamp -->
+      <rect x="250" y="600" width="300" height="20" fill="#1e120c"/><rect x="262" y="620" width="70" height="120" fill="#140c08"/><rect x="470" y="620" width="70" height="120" fill="#140c08"/>
+      <circle class="flick" cx="330" cy="580" r="150" fill="url(#lamp)"/>
+      <path d="M300 584 L360 584 L350 566 L310 566 Z" fill="#2f6a3a"/><rect x="327" y="584" width="6" height="16" fill="#8a6a2a"/>
+      <!-- a sheet over the body -->
+      <path d="M520 800 C 560 770, 640 765, 720 772 C 780 776, 820 790, 830 806 C 760 816, 600 818, 520 800 Z" fill="#d8d4cc" opacity=".55"/>
+      <!-- fireplace with embers -->
+      <rect x="1180" y="520" width="280" height="220" fill="#160d0a"/><rect x="1230" y="580" width="180" height="160" fill="#050304"/>
+      <rect x="1160" y="500" width="320" height="24" fill="#2a1a12"/>
+      <circle class="flick" cx="1320" cy="730" r="120" fill="url(#glow)" opacity=".45"/>
+      <path d="M1270 736 Q1300 716 1320 730 Q1345 712 1370 736 Z" fill="#8a3a14" opacity=".9"/>
+      ${candle(1200, 462, 1)}${candle(1440, 462, 1)}
+      <!-- wingback chair -->
+      <path d="M900 760 V600 C 900 560, 1060 560, 1060 600 V690 H1090 V760 H1060 V720 H930 V760 Z" fill="#0d0709"/>
+    </svg>`;
+  }
+  function drawing() {
+    rs(83);
+    let frames = ''; for (let i = 0; i < 6; i++) { const x = 300 + i * 175; frames += `<rect x="${x}" y="190" width="110" height="140" fill="#1a1216" stroke="#7a5a2a" stroke-width="7"/><ellipse cx="${x + 55}" cy="250" rx="26" ry="34" fill="#2a2026"/>`; }
+    let chand = ''; for (let i = -3; i <= 3; i++) chand += `<path d="M800 120 Q ${800 + i * 40} 170 ${800 + i * 55} 160" stroke="#6a5020" stroke-width="3" fill="none"/>${flame(800 + i * 55, 152, .7)}`;
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs>${defs}
+      <linearGradient id="dw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#151018"/><stop offset="1" stop-color="#1d1420"/></linearGradient></defs>
+      <rect width="${W}" height="${H}" fill="url(#dw)"/>
+      ${[0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<rect x="${i * 210}" y="0" width="5" height="740" fill="#0e0a10"/>`).join('')}
+      ${stormWindow(40, 150, 200, 480)}${stormWindow(1360, 150, 200, 480)}
+      ${frames}
+      <line x1="800" y1="0" x2="800" y2="120" stroke="#6a5020" stroke-width="4"/><circle class="flick" cx="800" cy="150" r="260" fill="url(#glow)" opacity=".5"/>${chand}
+      <rect y="740" width="${W}" height="160" fill="#0b080c"/>
+      <ellipse cx="800" cy="830" rx="600" ry="60" fill="#22101a" opacity=".6"/>
+      <path d="M340 780 V690 C 340 650, 600 650, 600 690 V780 Z" fill="#0c070a"/><rect x="320" y="720" width="300" height="60" rx="18" fill="#0f090c"/>
+      <path d="M1000 780 V690 C 1000 650, 1260 650, 1260 690 V780 Z" fill="#0c070a"/><rect x="980" y="720" width="300" height="60" rx="18" fill="#0f090c"/>
+      <ellipse cx="800" cy="770" rx="110" ry="16" fill="#140c0e"/><rect x="792" y="770" width="16" height="40" fill="#140c0e"/>
+    </svg>`;
+  }
+  function study() {
+    rs(97);
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs>${defs}
+      <radialGradient id="pool" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd890" stop-opacity=".5"/><stop offset="1" stop-color="#ffb860" stop-opacity="0"/></radialGradient></defs>
+      <rect width="${W}" height="${H}" fill="#0b0809"/>
+      ${bookshelf(0, 380, 60, 740)}
+      ${stormWindow(1180, 120, 260, 420)}
+      <rect x="560" y="200" width="140" height="160" fill="#26201c" stroke="#5a4a3a" stroke-width="6"/><circle cx="630" cy="280" r="34" fill="none" stroke="#8a7a5a" stroke-width="5"/><line x1="630" y1="280" x2="652" y2="262" stroke="#8a7a5a" stroke-width="4"/>
+      <rect y="740" width="${W}" height="160" fill="#090607"/>
+      <circle class="flick" cx="800" cy="620" r="320" fill="url(#pool)"/>
+      <rect x="560" y="640" width="480" height="22" fill="#24160e"/><rect x="580" y="662" width="90" height="100" fill="#170e09"/><rect x="930" y="662" width="90" height="100" fill="#170e09"/>
+      <path d="M770 640 L830 640 L820 616 L780 616 Z" fill="#2f6a3a"/><rect x="797" y="600" width="6" height="16" fill="#8a6a2a"/>
+      <rect x="700" y="626" width="70" height="12" fill="#5a1a14" transform="rotate(-6 735 632)"/>
+      <circle cx="1080" cy="600" r="44" fill="#1d2a26" stroke="#5a4a2a" stroke-width="4"/><rect x="1076" y="644" width="8" height="96" fill="#2a1a10"/>
+    </svg>`;
+  }
+
+  const SCENES = { exterior: () => exterior(false), dawn: () => exterior(true), hallway, parlor, musicroom, attic, manor: () => manor(false), manordawn: () => manor(true), library, drawing, study };
   const PHASE_SCENE = { lobby: 'exterior', hide: 'hallway', intro: 'exterior', seance: 'parlor', lock: 'parlor', hunt1: 'hallway', melody: 'musicroom', harmony: 'musicroom', rhythm: 'musicroom', hunt2: 'hallway', portraits: 'attic', finale: 'attic', release: 'attic', end: 'dawn' };
 
   // ---------- Eleanor ----------
@@ -292,7 +436,9 @@
     requestAnimationFrame(() => { next.classList.add('on'); prev.classList.remove('on'); setTimeout(() => { next.style.transition = ''; }, 50); });
     moteColor = name === 'attic' ? '232,228,210' : name === 'dawn' ? '255,226,180' : name === 'parlor' || name === 'hallway' ? '255,210,150' : '200,220,235';
   }
-  function sceneForPhase(ph) { return PHASE_SCENE[ph] || 'exterior'; }
+  let phaseMap = PHASE_SCENE;
+  function setPhaseMap(m) { phaseMap = m; }
+  function sceneForPhase(ph) { return phaseMap[ph] || 'exterior'; }
 
   // Eleanor: pos 'left' | 'right' | 'center'; ms = how long she stays (0 = until hidden)
   let ghostT = 0;
@@ -329,5 +475,5 @@
   // 0 = calm, 1 = time running low, 2 = over time
   function tension(level) { if (!root) init(); document.body.classList.toggle('tension-1', level === 1); document.body.classList.toggle('tension-2', level === 2); }
 
-  window.Scenes = { get current() { return current; }, init, setScene, sceneForPhase, ghost, hideGhost, transition, lightning, shimmer, tension, SCENES };
+  window.Scenes = { get current() { return current; }, setPhaseMap, init, setScene, sceneForPhase, ghost, hideGhost, transition, lightning, shimmer, tension, SCENES };
 })();

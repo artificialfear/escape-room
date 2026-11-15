@@ -163,5 +163,27 @@
   }
   function stopAmbient() { if (ambient) ambient.stop(); }
 
-  window.Sound = { audioSession, ctx: () => ensure(), master: () => (ensure(), master), out, ambientOn: () => !!ambient, ensure, unlocked, bell, key, hum, melody, chime, bigChime, wrong, whoosh, creak, thunder, heartbeat, startAmbient, stopAmbient, mtof, NOTE_NAMES };
+  // Rain on the windows (procedural): filtered noise with slow gusts
+  let rain = null;
+  function startRain(level = 1) {
+    const c = ensure();
+    if (rain) { rain.level(level); return; }
+    const src = c.createBufferSource(); src.buffer = noiseBuf(4); src.loop = true;
+    const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 500;
+    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 5200;
+    const g = c.createGain(); g.gain.value = 0.0001;
+    const gust = c.createOscillator(); gust.frequency.value = 0.07; const gg = c.createGain(); gg.gain.value = 0.012;
+    gust.connect(gg); gg.connect(g.gain);
+    src.connect(hp); hp.connect(lp); lp.connect(g); out(g, 0.25);
+    src.start(); gust.start();
+    let target = 0.035 * level;
+    g.gain.exponentialRampToValueAtTime(target, c.currentTime + 3);
+    rain = {
+      level(l) { target = Math.max(0.0001, 0.035 * l); g.gain.cancelScheduledValues(c.currentTime); g.gain.setValueAtTime(Math.max(g.gain.value, 0.0001), c.currentTime); g.gain.exponentialRampToValueAtTime(target, c.currentTime + 2); },
+      stop() { g.gain.cancelScheduledValues(c.currentTime); g.gain.setValueAtTime(Math.max(g.gain.value, 0.0001), c.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 3); setTimeout(() => { try { src.stop(); gust.stop(); } catch (e) {} }, 3200); rain = null; },
+    };
+  }
+  function stopRain() { if (rain) rain.stop(); }
+
+  window.Sound = { audioSession, ctx: () => ensure(), master: () => (ensure(), master), out, ambientOn: () => !!ambient, ensure, unlocked, bell, key, hum, melody, chime, bigChime, wrong, whoosh, creak, thunder, heartbeat, startAmbient, stopAmbient, startRain, stopRain, rainOn: () => !!rain, mtof, NOTE_NAMES };
 })();

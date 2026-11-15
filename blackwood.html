@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Death at Blackwood Hall</title>
+<link rel="stylesheet" href="css/common.css">
+<link rel="stylesheet" href="css/tv.css">
+<link rel="stylesheet" href="css/scenes.css">
+<link rel="stylesheet" href="css/blackwood.css">
+</head>
+<body class="asleep">
+<div class="fog"></div><div class="fog b"></div><div class="vignette"></div>
+<div id="app">
+  <div class="topbar">
+    <span class="brand">Death at Blackwood Hall</span>
+    <span class="act" id="act"></span>
+    <span class="pdot" id="dot-mat"><i></i>Mat</span>
+    <span class="pdot" id="dot-emily"><i></i>Emily</span>
+    <span id="hintcount"></span>
+    <span class="timer" id="timer"></span>
+    <button class="gear" id="gear" title="Game menu">⚙</button>
+  </div>
+  <div id="stage"></div>
+</div>
+<div id="hint" class="hidden"></div>
+<div id="banner" class="hidden"></div>
+<div id="paused" class="hidden"><div class="cinzel">Paused</div><p>The investigation is on hold…</p><p class="small">Tap <b>Resume</b> on either phone (or press P on the laptop).</p></div>
+<div id="flash"></div>
+<div id="wake">
+  <div class="wake-in">
+    <div class="wake-asleep">A storm rages over the moors.</div>
+    <h1 class="cinzel">Death at Blackwood Hall</h1>
+    <button class="btn primary" id="wakebtn">Approach the house</button>
+    <p class="wake-note">This also turns on the sound. Browsers need one click first.</p>
+  </div>
+</div>
+<script src="lib/peerjs.min.js"></script>
+<script src="lib/qrcode.js"></script>
+<script src="js/cards-data.js"></script>
+<script>window.AUDIO_EP = "bw";</script>
+<script src="js/sound.js"></script>
+<script src="js/audiobank.js"></script>
+<script src="js/notation.js"></script>
+<script src="js/scenes.js"></script>
+<script src="js/net.js"></script>
+<script src="js/blackwood.js"></script>
+<script src="js/tv-bw.js"></script>
+</body>
+</html>
