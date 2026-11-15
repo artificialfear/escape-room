@@ -2,7 +2,11 @@
 // The TV (host) runs this. Phones only ever receive their own "view" of the game.
 (function () {
   const ROLES = ['mat', 'emily'];
-  const NAME = { mat: 'Mat', emily: 'Emily' };
+  // Player names: each phone types a first name when it joins; until then, Player 1 / Player 2.
+  const DEFAULT_NAME = { mat: 'Player 1', emily: 'Player 2' };
+  const NAME = Object.assign({}, DEFAULT_NAME);
+  const cleanName = (s) => { const w = String(s || '').trim().split(/\s+/)[0].replace(/[^\p{L}'’-]/gu, '').slice(0, 14); return w ? w[0].toUpperCase() + w.slice(1) : ''; };
+  const applyNames = (n) => { Object.keys(DEFAULT_NAME).forEach((r) => { NAME[r] = (n && cleanName(n[r])) || DEFAULT_NAME[r]; }); };
   const other = (r) => (r === 'mat' ? 'emily' : 'mat');
   const PHASES = ['lobby', 'hide', 'intro', 'seance', 'lock', 'hunt1', 'melody', 'harmony', 'rhythm', 'hunt2', 'portraits', 'finale', 'release', 'end'];
   const PUZZLES = ['seance', 'lock', 'hunt1', 'melody', 'harmony', 'rhythm', 'hunt2', 'portraits', 'finale', 'release'];
@@ -130,8 +134,8 @@
   const HINTS = {
     seance: (g) => ['Both of you must hold your candles at the same time — and keep holding.', 'Press and hold the candle on both phones together for a few seconds without letting go.'],
     lock: (g) => ['The marks mean nothing alone. One of you can see the marks on the box; the other has the diary. Talk it through.', 'Each symbol in the diary stands for one digit. Read the box’s four marks left to right and translate each into its digit.'],
-    melody: (g) => ['Neither of you can play the tune alone. Replay it from your phone as often as you like, and work out which notes are on whose half.', 'It is five notes long. Mat has the low keys, Emily the high keys. Take turns in order; a wrong note starts the tune over. Watch the five lights on the TV.'],
-    harmony: (g) => ['Tap “Hear her note” on your phone. Mat sings her note (any octave). Emily sings a perfect fifth above it. Hold steady until your bar fills.', `Her note is ${PC_NAME[g.ghostPc]}. Mat sings ${PC_NAME[g.ghostPc]}; Emily sings ${PC_NAME[(g.ghostPc + 7) % 12]}.`],
+    melody: (g) => ['Neither of you can play the tune alone. Replay it from your phone as often as you like, and work out which notes are on whose half.', `It is five notes long. ${NAME.mat} has the low keys, ${NAME.emily} the high keys. Take turns in order; a wrong note starts the tune over. Watch the five lights on the TV.`],
+    harmony: (g) => [`Tap “Hear her note” on your phone. ${NAME.mat} sings her note (any octave). ${NAME.emily} sings a perfect fifth above it. Hold steady until your bar fills.`, `Her note is ${PC_NAME[g.ghostPc]}. ${NAME.mat} sings ${PC_NAME[g.ghostPc]}; ${NAME.emily} sings ${PC_NAME[(g.ghostPc + 7) % 12]}.`],
     rhythm: (g) => ['The manuscript is a message. One of you has the rule for reading it; the other has a chart.', 'Quarter notes are dashes, eighth notes are dots, and each measure is one letter. Look each pattern up in the telegraph chart.'],
     portraits: (g) => ['Say every clue out loud. Use the TV to match each name to an instrument — some clues name the person, some only the instrument.', `Start from what is certain. Chair 1 belonged to ${g.family.C.name}.`],
     finale: (g) => ['Gather all four pages from both phones (tap “Pages”). Each shows one note and its order, I to IV.', 'Mind the clefs — not every page is treble clef. Read each note, put them in order I–IV, and play them on the split keyboard (any octave is fine).'],
@@ -144,6 +148,7 @@
       this.st = saved && saved.v === 1 ? saved : Game.fresh();
       this.st.conn = { mat: false, emily: false };
       if (this.st.p && this.st.p.hold) this.st.p.hold = { mat: 0, emily: 0 };
+      this.st.names = this.st.names || {}; applyNames(this.st.names);
     }
     static fresh() {
       const seed = (Math.random() * 2 ** 31) | 0;
@@ -152,6 +157,11 @@
         ready: { mat: false, emily: false }, hideStep: 'mat', hides: {}, foundBy: {},
         startedAt: null, endedAt: null, paused: false, pausedAt: null, pausedTotal: 0, log: {}, hintLv: {}, hintsUsed: 0, skips: 0, lastHint: null, p: {}, conn: { mat: false, emily: false },
       };
+    }
+    setName(role, name) {
+      const n = cleanName(name); this.st.names = this.st.names || {};
+      if (!n || this.st.names[role] === n) return false;
+      this.st.names[role] = n; applyNames(this.st.names); this.changed(); return true;
     }
     on(ev, fn) { (this.listeners[ev] = this.listeners[ev] || []).push(fn); }
     emit(ev, data) { (this.listeners[ev] || []).forEach((fn) => fn(data)); }

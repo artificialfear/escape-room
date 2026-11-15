@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3 — 2026-11-15
+- Player names: phones now show **Player 1 / Player 2**, and each of you types a first name when you join (or changes it later on the join screen). Your name appears on the TV, the phones, the hints and the final program or case file in both games. Each phone remembers its name.
+- Blackwood Hall now plays your Last Recital music (title, hiding, Acts I–III, ending) under the storm, with the same loop points, until you give it music of its own.
+- Removed the computer-made door creak from both games.
+- Printed cards now say “HIDDEN BY PLAYER 1 / PLAYER 2”. Old cards still work: the MAT cards are Player 1’s and the EMILY cards are Player 2’s.
+
 ## 2.2 — 2026-11-15
 - Blackwood Hall: every lightning flash now cracks with a real thunderclap, cut from Mat's storm recording (about 4 seconds: sharp crack, short rumble, fade).
 

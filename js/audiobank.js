@@ -26,7 +26,7 @@
     { id: 'sfx_test', kind: 'sfx', label: 'TV sound test', desc: 'Played when a phone taps “Test TV sound” in the lobby.' },
   ];
   const SLOTS_BW = [
-    { id: 'music_title', kind: 'music', loop: true, label: 'Title music', desc: 'Join screen. A grand old house on a stormy night; mystery and intrigue. Loops. (Built-in: rain.)' },
+    { id: 'music_title', kind: 'music', loop: true, label: 'Title music', desc: 'Join screen. A grand old house on a stormy night; mystery and intrigue. Loops.' },
     { id: 'music_hiding', kind: 'music', loop: true, label: 'Hiding music', desc: 'While each of you hides the evidence cards. Sneaky, tiptoeing. Loops.' },
     { id: 'music_act1', kind: 'music', loop: true, label: 'Act I background', desc: 'The first third: the scene of the crime. Grave and tense, quiet enough to talk over. Loops.' },
     { id: 'music_act2', kind: 'music', loop: true, label: 'Act II background', desc: 'The middle third: questioning the household. Suspicious intrigue, a little brisker. Loops.' },
@@ -97,8 +97,8 @@
   async function probeRepo(id, kind) {
     const names = await repoListing();
     for (const ext of EXTS) if (names.has(`${id}.${ext}`)) return { url: `${FOLDER}/${id}.${ext}`, name: `${id}.${ext}` };
-    // Blackwood borrows The Last Recital's sound effects until you give it its own
-    if (EP === 'bw' && kind === 'sfx' && !(SLOTS.find((x) => x.id === id) || {}).noBorrow) {
+    // Blackwood borrows The Last Recital's music and sound effects until you give it its own
+    if (EP === 'bw' && (kind === 'sfx' || kind === 'music') && !(SLOTS.find((x) => x.id === id) || {}).noBorrow) {
       const lr = await repoListing('sounds');
       for (const ext of EXTS) if (lr.has(`${id}.${ext}`)) return { url: `sounds/${id}.${ext}`, name: `${id}.${ext} (from The Last Recital)`, borrowed: true };
     }
@@ -126,6 +126,7 @@
   }
   async function loadAll() {
     try { const r = await fetch(`${FOLDER}/loops.json`, { cache: 'no-cache' }); if (r.ok) loopInfo = await r.json(); } catch (e) {}
+    if (EP === 'bw') try { const r = await fetch('sounds/loops.json', { cache: 'no-cache' }); if (r.ok) borrowedLoops = await r.json(); } catch (e) {}
     await Promise.all(SLOTS.map(loadSlot));
     ready = true; readyFns.splice(0).forEach((f) => f());
   }
@@ -146,7 +147,8 @@
   let cur = null; // { id, src, gain, token }
   let duckLevel = 1;
   function musicLevel(id) { return settings.music * slotVol(id) * duckLevel; }
-  function loopFor(id) { const e = bank[id]; return e && e.src === 'repo' && !e.borrowed ? loopInfo[id] || null : null; }
+  let borrowedLoops = {}; // The Last Recital's loop points, for music Blackwood borrows
+  function loopFor(id) { const e = bank[id]; if (!e || e.src !== 'repo') return null; return (e.borrowed ? borrowedLoops[id] : loopInfo[id]) || null; }
   function decodeMusic(id) {
     const e = bank[id];
     if (!e.bufP) e.bufP = fetch(e.url).then((r) => r.arrayBuffer()).then((ab) => Sound.ctx().decodeAudioData(ab));

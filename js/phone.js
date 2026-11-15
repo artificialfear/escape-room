@@ -30,17 +30,22 @@
   function pickRole() {
     $('#footer').classList.add('hidden');
     main.innerHTML = `<div class="title center" style="margin-top:1em">Who is holding this phone?</div>
-      <div class="who-pick"><button class="btn primary" data-r="mat">Mat</button><button class="btn primary" data-r="emily">Emily</button></div>
-      <p class="muted center">Each of you uses your own phone.</p>`;
-    main.querySelectorAll('[data-r]').forEach((b) => (b.onclick = () => { role = b.dataset.r; localStorage.setItem('lr-role-' + room, role); start(); }));
+      <label class="l" for="pname">Your first name</label><input class="txt" id="pname" maxlength="14" autocomplete="given-name" autocapitalize="words" placeholder="First name" value="${myName()}">
+      <div class="who-pick"><button class="btn primary" data-r="mat">Player 1</button><button class="btn primary" data-r="emily">Player 2</button></div>
+      <p class="muted center">Each of you uses your own phone. One of you is Player 1, the other Player 2.</p>`;
+    main.querySelectorAll('[data-r]').forEach((b) => (b.onclick = () => { saveName($('#pname').value); role = b.dataset.r; localStorage.setItem('lr-role-' + room, role); start(); }));
+  }
+  // first name for this phone (kept on the phone, used in both games)
+  function myName() { try { return localStorage.getItem('lr-name') || ''; } catch (e) { return ''; } }
+  function saveName(n) { n = String(n || '').trim().split(/\s+/)[0].replace(/[^\p{L}'’-]/gu, '').slice(0, 14); n = n ? n[0].toUpperCase() + n.slice(1) : ''; try { if (n) localStorage.setItem('lr-name', n); } catch (e) {} return n;
   }
 
   function start() {
-    $('#who').textContent = role === 'mat' ? 'Mat' : 'Emily';
+    $('#who').textContent = myName() || (role === 'mat' ? 'Player 1' : 'Player 2');
     main.innerHTML = `<div class="panel center muted" style="margin-top:2em">Connecting to the TV…</div>`;
     client = new Net.Client(room, {
       onOpen() {
-        client.send({ t: 'hello', role });
+        client.send({ t: 'hello', role, name: myName() });
         if (pendingScan) { const c = pendingScan; pendingScan = ''; setTimeout(() => handleScan(c), 400); }
       },
       onStatus(ok, text) {
@@ -167,6 +172,7 @@
 
   function render() {
     const v = view, w = v.widget;
+    if (v.name) $('#who').textContent = v.name;
     $('#pausedov').classList.toggle('hidden', !v.paused);
     $('#pausebtn').classList.toggle('hidden', !v.canPause);
     if (v.paused) { stopSing(); closeScanner(); }
@@ -176,7 +182,7 @@
     const hb = $('#hintbtn');
     hb.classList.toggle('hidden', !v.hint);
     if (v.hint) { hb.textContent = v.hint.canSkip ? 'Skip' : `Hint ${v.hint.level + 1}/2`; hb.classList.toggle('skip', v.hint.canSkip); hb.classList.toggle('hint', !v.hint.canSkip); }
-    const key = [v.phase, v.solved, w.type, w.ready, w.done, w.whisper, w.otherReady, v.prompt, w.otherDone, w.tries, JSON.stringify(w.proposal || null), (v.info || '').length].join('|');
+    const key = [v.phase, v.solved, w.type, w.ready, w.done, w.whisper, w.otherReady, v.prompt, w.otherDone, w.tries, JSON.stringify(w.proposal || null), (v.info || '').length, v.name].join('|');
     if (key !== lastKey) {
       const rebuild = !(lastKey.split('|')[0] === v.phase && lastKey.split('|')[2] === w.type && ['code', 'word', 'chairs', 'time', 'multi'].includes(w.type) && !!v.solved === (lastKey.split('|')[1] === 'true'));
       lastKey = key;
@@ -201,13 +207,14 @@
           <div class="panel muted" style="font-size:.9em">Keep this page open the whole game, and turn your phone’s volume up. If the phone sleeps or disconnects, just reopen this page — it reconnects on its own.</div>
           <button class="btn big ${w.ready ? '' : 'primary'}" id="ready">${w.ready ? 'Ready ✓ (tap to undo)' : 'We’re ready'}</button>
           <p class="center muted" id="otherready"></p>
+          <div class="panel"><label class="l" for="pname">Your first name</label><div class="namerow"><input class="txt" id="pname" maxlength="14" autocomplete="given-name" autocapitalize="words" placeholder="First name" value="${myName()}"><button class="btn" id="pnamesave">Save</button></div></div>
           <div class="center"><button class="smalllink" id="switch">Not ${v.name}? Switch player</button></div>`;
         break;
       case 'wait':
         h = `<div class="title">Shh…</div><div class="panel prompt">${w.text}</div>`; break;
       case 'hideform':
         h = `<div class="title">Hide your ${L().pageWord}s</div>
-          <div class="prompt">Take the two printed ${L().pageWord}s whose tabs say <b>HIDDEN BY ${v.name.toUpperCase()}</b>. Hide each one in a <b>different</b> spot anywhere in the house — somewhere safe that ${v.other} can reach. <b>Tear off the tab</b> as you hide each one, and remember which was ${L().PageWord} I and ${L().PageWord} II.</div>
+          <div class="prompt">Take the two printed ${L().pageWord}s whose tabs say <b>HIDDEN BY ${v.role === 'mat' ? 'PLAYER 1' : 'PLAYER 2'}</b>. Hide each one in a <b>different</b> spot anywhere in the house — somewhere safe that ${v.other} can reach. <b>Tear off the tab</b> as you hide each one, and remember which was ${L().PageWord} I and ${L().PageWord} II.</div>
           <div class="panel muted" style="font-size:.9em">Make them a little tricky, but findable in a few minutes. Then tell the house where you hid them. ${v.other} will only ever see the room — and your whisper, if they ask for help.</div>
           ${w.cards.map((s) => `<div class="panel"><div class="cinzel" style="color:var(--gold2)">${L().PageWord} ${s}</div>
             <label class="l">Room</label><select id="room-${s}"><option value="">Choose a room…</option>${w.rooms.map((r) => `<option>${r}</option>`).join('')}</select>
@@ -289,6 +296,7 @@
     const on = (id, fn) => { const el = $('#' + id); if (el) el.onclick = fn; };
     on('cont', () => send({ t: 'continue' }));
     on('ready', () => send({ t: 'ready', on: !w.ready }));
+    on('pnamesave', () => { const n = saveName($('#pname').value); if (!n) { toast('Type your first name first.'); return; } send({ t: 'name', name: n }); $('#who').textContent = n; toast(`Hello, ${n}!`, true); });
     on('switch', () => { localStorage.removeItem('lr-role-' + room); location.reload(); });
     on('tsnd', () => { send({ t: 'testsound' }); toast('Listen for a chime from the TV.', true); });
     on('tcam', () => openScanner((c) => toast('Camera works! ✓', true)));
@@ -392,13 +400,13 @@
     const kbd = $('#kbd');
     const isBlack = (m) => [1, 3, 6, 8, 10].includes(m % 12);
     const list = keys.slice();
-    const stub = isBlack(list[0]); // Emily's half starts on F♯: show Mat's F as a stub
+    const stub = isBlack(list[0]); // Player 2's half starts on F♯: show Player 1's F as a stub
     const whites = list.filter((m) => !isBlack(m));
     const nW = whites.length + (stub ? 0.5 : 0);
     const ww = 100 / nW;
     let html = '';
     let x = stub ? ww * 0.5 : 0;
-    if (stub) html += `<div class="w stub" style="left:0;width:${ww * 0.5}%">Mat</div>`;
+    if (stub) html += `<div class="w stub" style="left:0;width:${ww * 0.5}%">${(view && view.other) || 'Player 1'}</div>`;
     const pos = {};
     whites.forEach((m) => { pos[m] = x; html += `<div class="w" data-m="${m}" style="left:${x}%;width:${ww}%">${PC[m % 12]}</div>`; x += ww; });
     list.filter(isBlack).forEach((m) => {

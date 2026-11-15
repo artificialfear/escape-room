@@ -37,3 +37,10 @@ A static GitHub Pages app. `index.html` is the TV/host and runs the game. `play.
 - Optional recorded soundtrack and sound effects to replace the synthesized ones.
 - More episodes: the engine could take content packs.
 - Mat's notes from the first playthrough go here.
+
+
+## 2.3 notes (player names, borrowed music, no creak)
+- Names: roles stay `mat`/`emily` internally (Player 1 / Player 2). `NAME` in game.js / blackwood.js is a live object filled from `st.names` by `applyNames()`; `Game.setName(role, name)` cleans the name (first word, letters only, 14 chars) and broadcasts. Phones keep `lr-name` in localStorage, send it in `hello` and as `{t:'name'}` from the lobby Save button. Restart carries `st.names` over.
+- Blackwood music slots now borrow `sounds/music_*.mp3` with `sounds/loops.json` loop points (`borrowedLoops` in audiobank.js) until `sounds/blackwood/` has its own.
+- `Sound.creak` is no longer used in either game (ambient bed, house-noise fallback, scene-change fallback). Mat found it distracting.
+- Card tabs read PLAYER 1 / PLAYER 2.

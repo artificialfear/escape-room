@@ -117,7 +117,7 @@ with sync_playwright() as p:
     shot(tv, 'tv-rhythm'); shot(ph['mat'], 'mat-rhythm'); shot(ph['emily'], 'emily-rhythm')
     # a phone drops off: TV shows a banner after a grace period, and it clears when the phone comes back
     ph['emily'].close(); tv.wait_for_timeout(24000)
-    assert tv.is_visible('#banner') and 'Emily' in tv.text_content('#banner'), 'banner'
+    assert tv.is_visible('#banner') and 'Player 2' in tv.text_content('#banner'), 'banner'
     shot(tv, 'tv-banner')
     ph['emily'] = mk(390, 844, True); ph['emily'].goto(BASE + 'play.html?r=' + room + '&as=emily'); tv.wait_for_timeout(1500)
     assert not tv.is_visible('#banner'), 'banner should clear'

@@ -144,3 +144,6 @@ footer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: fle
 .cw-grid div { display: flex; flex-direction: column; background: rgba(255,255,255,.04); border-radius: 4px; padding: .15em 0; }
 .cw-grid b { color: var(--dim); font-size: .8em; } .cw-grid span { color: var(--gold2); font-size: .95em; }
 .cipher-text { font-family: "Cinzel", serif; letter-spacing: .25em; font-size: 1.15em; line-height: 1.8; word-spacing: .5em; }
+.namerow { display: flex; gap: .5em; }
+.namerow .txt { flex: 1; }
+.namerow .btn { flex: 0 0 auto; width: auto; padding: .6em 1em; margin: 0; }

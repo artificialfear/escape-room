@@ -25,6 +25,7 @@
         const old = roleConn[m.role];
         if (old && old !== conn) { host.send(old, { t: 'replaced' }); setTimeout(() => { try { old.close(); } catch (e) {} }, 300); }
         roleConn[m.role] = conn; conn._role = m.role; lastSeen[m.role] = Date.now();
+        if (m.name) game.setName(m.role, m.name);
         setConn(m.role, true); sendView(m.role);
         return;
       }
@@ -32,6 +33,7 @@
       lastSeen[role] = Date.now();
       if (!game.st.conn[role]) setConn(role, true);
       if (m.t === 'ping') { host.send(conn, { t: 'pong' }); return; }
+      if (m.t === 'name') { game.setName(role, m.name); return; }
       game.handle(role, m);
     },
     onClose(conn) { if (conn._role && roleConn[conn._role] === conn) { roleConn[conn._role] = null; setConn(conn._role, false); } },
@@ -88,7 +90,7 @@
     if (!Sound.unlocked() || ph === 'end' || game.st.paused || Math.random() > 0.16) return;
     const r = Math.random();
     if (r < 0.45) strike(0.3);
-    else { const pick = ['sfx_house2', 'sfx_house3'].filter(AudioBank.has); if (pick.length) AudioBank.sfx(pick[(Math.random() * pick.length) | 0]); else Sound.creak(); }
+    else { const pick = ['sfx_house2', 'sfx_house3'].filter(AudioBank.has); if (pick.length) AudioBank.sfx(pick[(Math.random() * pick.length) | 0]); }
   }, 7000);
   function playSound(name) {
     if (!Sound.unlocked()) return;
@@ -141,7 +143,7 @@
         <div style="text-align:left">
           <h1>Death at<br>Blackwood Hall</h1>
           <div class="sub">A Victorian murder mystery for two · about an hour</div>
-          <div class="slots"><div class="slot" id="slot-mat"><div class="n">Mat</div><div class="s">not joined</div></div><div class="slot" id="slot-emily"><div class="n">Emily</div><div class="s">not joined</div></div></div>
+          <div class="slots"><div class="slot" id="slot-mat"><div class="n">${esc(NAME.mat)}</div><div class="s">not joined</div></div><div class="slot" id="slot-emily"><div class="n">${esc(NAME.emily)}</div><div class="s">not joined</div></div></div>
           <div class="btns">
             <a class="btn" href="cards.html?g=bw" target="_blank">Print the evidence</a>
             <button class="btn" id="fs">Full screen</button>
@@ -183,7 +185,7 @@
     switch (ph) {
       case 'roles':
         prompt = 'Take the case — together';
-        vis = `<div><div class="badges"><div class="badge" id="bd-mat"><div class="bd-ico">✦</div><div class="bd-t">Inspector</div><div class="bd-n">Mat Graham</div><div class="bd-s">Scotland Yard</div></div><div class="badge" id="bd-emily"><div class="bd-ico">✚</div><div class="bd-t">Doctor</div><div class="bd-n">Emily Graham</div><div class="bd-s">Physician</div></div></div><div class="holdbar"><div id="holdbar"></div></div></div>`;
+        vis = `<div><div class="badges"><div class="badge" id="bd-mat"><div class="bd-ico">✦</div><div class="bd-t">Inspector</div><div class="bd-n">${NAME.mat}</div><div class="bd-s">Scotland Yard</div></div><div class="badge" id="bd-emily"><div class="bd-ico">✚</div><div class="bd-t">Doctor</div><div class="bd-n">${NAME.emily}</div><div class="bd-s">Physician</div></div></div><div class="holdbar"><div id="holdbar"></div></div></div>`;
         break;
       case 'body':
         prompt = 'Establish the time of death';
@@ -247,7 +249,7 @@
     return `<div class="program fadein">
       <div class="pg-head">Scotland Yard · Case File No. ${1000 + (game.st.seed % 9000)}</div>
       <div class="pg-title">Death at Blackwood Hall</div>
-      <div class="pg-sub">investigated by <b>Inspector Mat Graham</b> &amp; <b>Dr. Emily Graham</b></div>
+      <div class="pg-sub">investigated by <b>Inspector ${NAME.mat}</b> &amp; <b>Dr. ${NAME.emily}</b></div>
       <div class="pg-rule"></div>
       <div class="pg-body">
         <div class="pg-rows">${rows}</div>
@@ -263,9 +265,9 @@
   function updateDynamic() {
     const st = game.st, ph = st.phase;
     ROLES.forEach((r) => {
-      $('#dot-' + r).classList.toggle('on', !!st.conn[r]);
+      $('#dot-' + r).classList.toggle('on', !!st.conn[r]); $('#dot-' + r).lastChild.textContent = NAME[r];
       const slot = $('#slot-' + r);
-      if (slot) { slot.classList.toggle('on', !!st.conn[r]); slot.classList.toggle('ready', !!st.ready[r]); slot.querySelector('.s').textContent = st.ready[r] ? 'ready' : st.conn[r] ? 'joined' : 'not joined'; }
+      if (slot) { slot.classList.toggle('on', !!st.conn[r]); slot.classList.toggle('ready', !!st.ready[r]); slot.querySelector('.n').textContent = NAME[r]; slot.querySelector('.s').textContent = st.ready[r] ? 'ready' : st.conn[r] ? 'joined' : 'not joined'; }
     });
     $('#hintcount').textContent = st.startedAt ? `Hints ${st.hintsUsed}` : '';
     if (ph === 'roles') ROLES.forEach((r) => { const b = $('#bd-' + r); if (b) b.classList.toggle('held', !!(st.p.hold && st.p.hold[r])); });
@@ -323,8 +325,8 @@
 
   function restart() {
     localStorage.removeItem(STATE_KEY);
-    const conn = game.st.conn;
-    game.st = BWGame.fresh(); game.st.conn = conn;
+    const conn = game.st.conn, names = game.st.names;
+    game.st = BWGame.fresh(); game.st.conn = conn; game.st.names = names || {};
     lastKey = ''; onChange(); applyMusic();
   }
   $('#gear').onclick = () => {

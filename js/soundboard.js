@@ -18,9 +18,9 @@
     sfx_page: { text: 'Built-in: shimmer', play: () => { [67, 71, 74, 79].forEach((m, i) => Sound.bell(m, i * 0.12, 2, 0.2)); Sound.whoosh(0.12); } },
     sfx_hint: { text: 'Built-in: whoosh', play: () => Sound.whoosh(0.18) },
     sfx_heartbeat: { text: 'Built-in: heartbeat', play: Sound.heartbeat },
-    sfx_house1: { text: 'Built-in: creak', play: Sound.creak },
-    sfx_house2: { text: 'Built-in: creak', play: Sound.creak },
-    sfx_house3: { text: 'Built-in: creak', play: Sound.creak },
+    sfx_house1: { text: 'Built-in: none', play: () => {} },
+    sfx_house2: { text: 'Built-in: none', play: () => {} },
+    sfx_house3: { text: 'Built-in: none', play: () => {} },
     sfx_test: { text: 'Built-in: chime', play: Sound.chime },
   };
   let playingSrc = null;

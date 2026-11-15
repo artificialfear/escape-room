@@ -152,8 +152,7 @@
     const scale = [57, 60, 62, 63, 65, 67, 68, 72];
     const timer = setInterval(() => {
       const r = Math.random();
-      if (r < 0.18) creak();
-      else if (r < 0.30) bell(scale[(Math.random() * scale.length) | 0] + 12, 0, 2.5, 0.05);
+      if (r < 0.12) bell(scale[(Math.random() * scale.length) | 0] + 12, 0, 2.5, 0.05);
       else if (r < 0.34) whoosh(0.07);
     }, 6000);
     ambient = {

@@ -2,7 +2,11 @@
 // The TV (host) runs this. Phones only ever receive their own "view".
 (function () {
   const ROLES = ['mat', 'emily'];
-  const NAME = { mat: 'Mat', emily: 'Emily' };
+  // Player names: each phone types a first name when it joins; until then, Player 1 / Player 2.
+  const DEFAULT_NAME = { mat: 'Player 1', emily: 'Player 2' };
+  const NAME = Object.assign({}, DEFAULT_NAME);
+  const cleanName = (s) => { const w = String(s || '').trim().split(/\s+/)[0].replace(/[^\p{L}'’-]/gu, '').slice(0, 14); return w ? w[0].toUpperCase() + w.slice(1) : ''; };
+  const applyNames = (n) => { Object.keys(DEFAULT_NAME).forEach((r) => { NAME[r] = (n && cleanName(n[r])) || DEFAULT_NAME[r]; }); };
   const TITLE = { mat: 'Inspector', emily: 'Dr.' };
   const other = (r) => (r === 'mat' ? 'emily' : 'mat');
   const PHASES = ['lobby', 'hide', 'intro', 'roles', 'body', 'letter', 'hunt1', 'interview', 'diary', 'hunt2', 'accuse', 'end'];
@@ -217,6 +221,7 @@
       this.st = saved && saved.v === 'bw1' ? saved : BWGame.fresh();
       this.st.conn = { mat: false, emily: false };
       if (this.st.p && this.st.p.hold) this.st.p.hold = { mat: 0, emily: 0 };
+      this.st.names = this.st.names || {}; applyNames(this.st.names);
     }
     static fresh() {
       const seed = (Math.random() * 2 ** 31) | 0;
@@ -226,6 +231,11 @@
         startedAt: null, endedAt: null, paused: false, pausedAt: null, pausedTotal: 0, log: {}, hintLv: {}, hintsUsed: 0, skips: 0, wrong: 0,
         lastHint: null, p: {}, conn: { mat: false, emily: false }, accused: null,
       };
+    }
+    setName(role, name) {
+      const n = cleanName(name); this.st.names = this.st.names || {};
+      if (!n || this.st.names[role] === n) return false;
+      this.st.names[role] = n; applyNames(this.st.names); this.changed(); return true;
     }
     on(ev, fn) { (this.listeners[ev] = this.listeners[ev] || []).push(fn); }
     emit(ev, data) { (this.listeners[ev] || []).forEach((fn) => fn(data)); }
@@ -415,8 +425,8 @@
     }
     roleCard(role) {
       return role === 'mat'
-        ? doc('Inspector Mat Graham, Scotland Yard', '<p>You came to Blackwood Hall for a quiet weekend as an old friend of Lord Ashcombe. You are off duty — until tonight.</p><p>You notice <b>places, objects and people’s stories</b>. The servants talk to you.</p>')
-        : doc('Dr. Emily Graham, physician', '<p>You are Lord Ashcombe’s personal physician, invited for the weekend.</p><p>You notice <b>bodies, hands and wounds</b> — and you remember where you were, and with whom, all evening.</p>');
+        ? doc(`Inspector ${NAME.mat}, Scotland Yard`, '<p>You came to Blackwood Hall for a quiet weekend as an old friend of Lord Ashcombe. You are off duty — until tonight.</p><p>You notice <b>places, objects and people’s stories</b>. The servants talk to you.</p>')
+        : doc(`Dr. ${NAME.emily}, physician`, '<p>You are Lord Ashcombe’s personal physician, invited for the weekend.</p><p>You notice <b>bodies, hands and wounds</b> — and you remember where you were, and with whom, all evening.</p>');
     }
     bodyDocs(role) {
       const g = this.g, wpn = W[g.weapon];

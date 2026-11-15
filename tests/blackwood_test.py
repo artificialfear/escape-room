@@ -25,9 +25,21 @@ with sync_playwright() as p:
     tv.wait_for_timeout(1500)
     amb = tv.evaluate("AudioBank.playingAmb()"); assert 'amb_rain' in amb and 'amb_thunder' in amb, amb
     assert tv.evaluate("AudioBank.has('sfx_wake') && AudioBank.has('amb_rain')"), 'storm sounds loaded'
+    G0 = lambda: tv.evaluate('window.__game.st')
     ph = {r: mk(390, 844) for r in ['mat', 'emily']}
     for r in ph: ph[r].goto(BASE + f'play.html?r={room}&g=bw&as={r}')
-    ph['mat'].wait_for_selector('#ready'); tv.wait_for_timeout(500); shot(tv, 'tv-lobby'); shot(ph['mat'], 'mat-lobby')
+    ph['mat'].wait_for_selector('#ready'); tv.wait_for_timeout(500)
+    # names: default Player 1 / Player 2, then each phone types a first name
+    assert tv.text_content('#slot-mat .n') == 'Player 1' and tv.text_content('#slot-emily .n') == 'Player 2', 'default names'
+    assert tv.evaluate("AudioBank.playingId()") == 'music_title', 'borrowed title music: ' + str(tv.evaluate("AudioBank.playingId()"))
+    assert not tv.evaluate("Sound.ambientOn()"), 'no synth drone'
+    ph['mat'].fill('#pname', 'jordan <b>x'); ph['mat'].click('#pnamesave'); tv.wait_for_timeout(500)
+    ph['emily'].fill('#pname', 'Sam'); ph['emily'].click('#pnamesave'); tv.wait_for_timeout(500)
+    assert tv.text_content('#slot-mat .n') == 'Jordan' and tv.text_content('#slot-emily .n') == 'Sam', 'names on TV'
+    assert tv.text_content('#dot-mat') == 'Jordan', 'name in status dot'
+    assert 'Welcome, Jordan' in ph['mat'].text_content('#main') and ph['mat'].text_content('#who') == 'Jordan', 'name on phone'
+    assert G0()['names'] == {'mat': 'Jordan', 'emily': 'Sam'}
+    shot(tv, 'tv-lobby'); shot(ph['mat'], 'mat-lobby')
     G = lambda: tv.evaluate('window.__game.st')
     ph['mat'].click('#ready'); ph['emily'].click('#ready'); tv.wait_for_timeout(600); assert G()['phase'] == 'hide'
     for r, rooms in [('mat', ['Kitchen', 'Office']), ('emily', ['Bedroom', 'Closet'])]:
@@ -84,7 +96,7 @@ with sync_playwright() as p:
     ph['emily'].select_option('#akiller', g['K']); ph['emily'].select_option('#aweapon', g['weapon']); ph['emily'].click('#propose'); tv.wait_for_timeout(500)
     ph['mat'].click('#agree'); tv.wait_for_timeout(1500); assert G()['phase'] == 'end', G()['phase']
     tv.wait_for_timeout(9000); shot(tv, 'tv-reconstruction'); shot(ph['mat'], 'mat-end')
-    tv.wait_for_timeout(15000); assert tv.query_selector('.program'), 'case file'; shot(tv, 'tv-casefile')
+    tv.wait_for_timeout(15000); assert tv.query_selector('.program'), 'case file'; assert 'Inspector Jordan' in tv.text_content('.program') and 'Dr. Sam' in tv.text_content('.program'), 'names in case file'; shot(tv, 'tv-casefile')
     tv.reload(); tv.click('#wakebtn'); tv.wait_for_timeout(800); assert G()['phase'] == 'end'
     b.close()
 srv.shutdown()

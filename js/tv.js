@@ -24,6 +24,7 @@
         const old = roleConn[m.role];
         if (old && old !== conn) { host.send(old, { t: 'replaced' }); setTimeout(() => { try { old.close(); } catch (e) {} }, 300); }
         roleConn[m.role] = conn; conn._role = m.role; lastSeen[m.role] = Date.now();
+        if (m.name) game.setName(m.role, m.name);
         setConn(m.role, true); sendView(m.role);
         return;
       }
@@ -31,6 +32,7 @@
       lastSeen[role] = Date.now();
       if (!game.st.conn[role]) setConn(role, true);
       if (m.t === 'ping') { host.send(conn, { t: 'pong' }); return; }
+      if (m.t === 'name') { game.setName(role, m.name); return; }
       game.handle(role, m);
     },
     onClose(conn) { if (conn._role && roleConn[conn._role] === conn) { roleConn[conn._role] = null; setConn(conn._role, false); } },
@@ -88,7 +90,6 @@
     if (!Sound.unlocked() || ph === 'lobby' || ph === 'end' || Math.random() > 0.15) return;
     const house = ['sfx_house1', 'sfx_house2', 'sfx_house3'].filter(AudioBank.has);
     if (house.length) AudioBank.sfx(house[(Math.random() * house.length) | 0]);
-    else if (!Sound.ambientOn()) Sound.creak();
   }, 7000);
 
   function playSound(name, arg) {
@@ -101,7 +102,7 @@
         else if (arg === 'melody') setTimeout(() => Sound.melody(game.g.melody), 2500);
         else if (arg === 'harmony') setTimeout(() => Sound.hum(ghostMidi(game.g.ghostPc), 4.5), 2000);
         else if (arg === 'hunt1' || arg === 'hunt2') fx('sfx_transition', () => Sound.whoosh(0.2));
-        else if (arg === 'rhythm' || arg === 'portraits') fx('sfx_transition', Sound.creak);
+        else if (arg === 'rhythm' || arg === 'portraits') fx('sfx_transition', () => Sound.whoosh(0.2));
         else if (arg === 'release') fx('sfx_heartbeat', Sound.heartbeat);
         break;
       case 'solve': fx('sfx_solve', Sound.chime); break;
@@ -167,7 +168,7 @@
         <div style="text-align:left">
           <h1>The Last<br>Recital</h1>
           <div class="sub">A haunted escape room for two · about an hour</div>
-          <div class="slots"><div class="slot" id="slot-mat"><div class="n">Mat</div><div class="s">not joined</div></div><div class="slot" id="slot-emily"><div class="n">Emily</div><div class="s">not joined</div></div></div>
+          <div class="slots"><div class="slot" id="slot-mat"><div class="n">${esc(NAME.mat)}</div><div class="s">not joined</div></div><div class="slot" id="slot-emily"><div class="n">${esc(NAME.emily)}</div><div class="s">not joined</div></div></div>
           <div class="btns">
             <a class="btn" href="cards.html" target="_blank">Print the pages</a>
             <button class="btn" id="fs">Full screen</button>
@@ -229,7 +230,7 @@
         break;
       case 'harmony':
         prompt = 'Sing with her';
-        vis = `<div class="voices"><div class="voice" id="v-mat"><div class="wave">Mat</div></div><div class="voice ghost"><div class="wave">Eleanor</div></div><div class="voice" id="v-emily"><div class="wave">Emily</div></div></div>`;
+        vis = `<div class="voices"><div class="voice" id="v-mat"><div class="wave">${NAME.mat}</div></div><div class="voice ghost"><div class="wave">Eleanor</div></div><div class="voice" id="v-emily"><div class="wave">${NAME.emily}</div></div></div>`;
         break;
       case 'rhythm':
         prompt = 'Decode the word';
@@ -261,7 +262,7 @@
     return `<div class="program fadein">
       <div class="pg-head">The Vane House · Savannah</div>
       <div class="pg-title">The Last Recital</div>
-      <div class="pg-sub">performed tonight by <b>Mat</b> &amp; <b>Emily</b></div>
+      <div class="pg-sub">performed tonight by <b>${NAME.mat}</b> &amp; <b>${NAME.emily}</b></div>
       <div class="pg-rule"></div>
       <div class="pg-body">
         <div class="pg-rows">${rows}</div>
@@ -283,10 +284,11 @@
   function updateDynamic() {
     const st = game.st, ph = st.phase;
     ROLES.forEach((r) => {
-      $('#dot-' + r).classList.toggle('on', !!st.conn[r]);
+      $('#dot-' + r).classList.toggle('on', !!st.conn[r]); $('#dot-' + r).lastChild.textContent = NAME[r];
       const slot = $('#slot-' + r);
       if (slot) {
         slot.classList.toggle('on', !!st.conn[r]); slot.classList.toggle('ready', !!st.ready[r]);
+        slot.querySelector('.n').textContent = NAME[r];
         slot.querySelector('.s').textContent = st.ready[r] ? 'ready' : st.conn[r] ? 'joined' : 'not joined';
       }
     });
@@ -356,8 +358,8 @@
 
   function restart() {
     localStorage.removeItem(STATE_KEY);
-    const conn = game.st.conn;
-    game.st = Game.fresh(); game.st.conn = conn;
+    const conn = game.st.conn, names = game.st.names;
+    game.st = Game.fresh(); game.st.conn = conn; game.st.names = names || {};
     lastKey = ''; onChange(); applyMusic();
   }
 
