@@ -51,6 +51,12 @@
     ROLES.forEach((r) => { if (!role || role === r) { const c = roleConn[r]; if (c) host.send(c, { t: 'flash', kind, text }); } });
     if (!role && kind === 'bad') showFlash(text);
   });
+  game.on('pause', (on) => { applyPauseAudio(on); });
+  function applyPauseAudio(on) {
+    if (!Sound.unlocked()) return;
+    if (on) { AudioBank.setDuck(0.18); if (Sound.ambientOn()) Sound.startAmbient(0.25); }
+    else applyMusic();
+  }
   game.on('shake', () => { const s = $('#stage'); s.classList.remove('shake'); void s.offsetWidth; s.classList.add('shake'); });
   game.on('sound', ({ name, arg }) => {
     if (name === 'solve' || name === 'bigsolve') Scenes.shimmer();
@@ -187,7 +193,7 @@
       return;
     }
     if (ph === 'end') {
-      const secs = Math.round((st.endedAt - st.startedAt) / 1000);
+      const secs = Math.round(game.elapsed());
       el.innerHTML = `${storyBlock('end')}<div class="endstats fadein" style="animation-delay:4.5s"><div><b>${fmt(secs)}</b><span>ESCAPE TIME</span></div><div><b>${st.hintsUsed}</b><span>HINTS</span></div><div><b>${st.skips}</b><span>SKIPS</span></div></div>`;
       return;
     }
@@ -276,11 +282,25 @@
     }
     if (ph === 'harmony') ROLES.forEach((r) => { const v = $('#v-' + r); if (v) { v.classList.toggle('done', !!st.p.sang[r]); v.querySelector('.wave').textContent = st.p.sang[r] ? `${NAME[r]} ✓` : NAME[r]; } });
     const tr = $('#tries'); if (tr) tr.textContent = st.p.tries ? `Failed attempts: ${st.p.tries}` : '';
+    $('#paused').classList.toggle('hidden', !st.paused);
+    renderBanner();
     const h = $('#hint');
     if (st.lastHint && !st.solved) { h.innerHTML = `<b>ELEANOR WHISPERS · HINT ${st.lastHint.level} OF 2</b>${st.lastHint.text}`; h.classList.remove('hidden'); }
     else h.classList.add('hidden');
   }
 
+  // Connection banner: only after a short grace period, so brief blips don't flash on screen
+  const lostSince = { net: 0, mat: 0, emily: 0 };
+  function renderBanner() {
+    const st = game.st, now = Date.now(), b = $('#banner'); if (!b) return;
+    const inGame = st.phase !== 'lobby';
+    lostSince.net = netStatus.ok ? 0 : (lostSince.net || now);
+    ROLES.forEach((r) => { lostSince[r] = st.conn[r] || !inGame ? 0 : (lostSince[r] || now); });
+    const msgs = [];
+    if (lostSince.net && now - lostSince.net > 4000) msgs.push('Reconnecting to the connection service… Your progress is saved.');
+    ROLES.forEach((r) => { if (lostSince[r] && now - lostSince[r] > 4000) msgs.push(`${NAME[r]}’s phone lost its connection. Reopen the game page on that phone — progress is saved.`); });
+    b.innerHTML = msgs.join('<br>'); b.classList.toggle('hidden', !msgs.length);
+  }
   function fmt(secs) { const neg = secs < 0; secs = Math.abs(secs); return (neg ? '+' : '') + Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0'); }
   let flashT = 0;
   function showFlash(text) { const f = $('#flash'); f.textContent = text; f.classList.add('show'); clearTimeout(flashT); flashT = setTimeout(() => f.classList.remove('show'), 2600); }
@@ -290,13 +310,15 @@
   setInterval(() => {
     const st = game.st, t = $('#timer');
     if (st.startedAt) {
-      const el = st.endedAt ? Math.round((st.endedAt - st.startedAt) / 1000) : Math.floor((Date.now() - st.startedAt) / 1000);
+      const el = st.endedAt ? Math.round(game.elapsed()) : Math.floor(game.elapsed());
       const left = 60 * 60 - el;
       t.textContent = st.endedAt ? fmt(el) : (left >= 0 ? fmt(left) : fmt(-left));
       t.classList.toggle('over', left < 0 && !st.endedAt);
       Scenes.tension(st.endedAt ? 0 : left < 0 ? 2 : left < 600 ? 1 : 0);
       t.title = left < 0 ? 'Over the hour — keep going!' : 'Time remaining';
+      t.classList.toggle('paused', !!st.paused);
     } else t.textContent = '';
+    renderBanner();
     const p = game.tick();
     if (typeof p === 'number') {
       const b = $('#holdbar'); if (b) b.style.width = Math.round(p * 100) + '%';
@@ -312,13 +334,20 @@
   }
 
   $('#gear').onclick = () => {
-    const c = prompt('Game menu:\n1 = Restart from the lobby (fresh puzzles)\n2 = Replay the current sound\n\nType a number:');
+    const c = prompt('Game menu:\n1 = Restart from the lobby (fresh puzzles)\n2 = Replay the current sound\n3 = Pause / resume\n\nType a number:');
+    if (c === '3') game.setPaused(!game.st.paused);
     if (c === '1' && confirm('Really restart? Progress will be lost.')) restart();
     if (c === '2') { const ph = game.st.phase; if (ph === 'melody') playSound('melody', game.g.melody); if (ph === 'harmony') playSound('hum', game.g.ghostPc); }
   };
+  document.addEventListener('keydown', (e) => { if ((e.key === 'p' || e.key === 'P') && !e.metaKey && !e.ctrlKey) game.setPaused(!game.st.paused); });
+  // keep the Mac's screen awake while the game is open (otherwise the cast can drop)
+  let wakeLock = null;
+  async function keepAwake() { try { if ('wakeLock' in navigator && !wakeLock && document.visibilityState === 'visible') { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch (e) {} }
+  document.addEventListener('visibilitychange', keepAwake);
   $('#wakebtn').onclick = () => {
+    keepAwake();
     $('#wake').remove();
-    Sound.ensure(); Sound.ctx().resume().then(applyMusic, applyMusic);
+    Sound.ensure(); Sound.ctx().resume().then(() => { applyMusic(); if (game.st.paused) applyPauseAudio(true); }, applyMusic);
   };
   render();
   // expose for automated tests only

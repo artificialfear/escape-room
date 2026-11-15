@@ -114,3 +114,10 @@ footer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: fle
 .fbtn.hint { color: var(--ghost); border-color: rgba(143,201,192,.4); }
 .fbtn.skip { color: #e9a090; border-color: rgba(156,52,52,.6); }
 .smalllink { background: none; border: 0; color: var(--dim); font-size: .8em; text-decoration: underline; margin-top: 2em; }
+
+.fbtn.pause { flex: 0 0 3.4em; color: var(--dim); }
+#pausedov { position: fixed; inset: 0; z-index: 15; background: rgba(5,4,7,.92); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2em; text-align: center; }
+#pausedov .cinzel { font-size: 2.2em; color: var(--gold2); letter-spacing: .25em; }
+#pausedov p { font-style: italic; margin: .4em 0 1.4em; }
+#lostov { position: fixed; left: 0; right: 0; top: 0; z-index: 16; padding: calc(.7em + env(safe-area-inset-top)) 1em .7em; background: rgba(90,50,10,.96); border-bottom: 1px solid var(--gold); color: #ffe9c2; font-size: .9em; text-align: center; }
+#lostov span { display: block; font-size: .85em; opacity: .85; }

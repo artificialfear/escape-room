@@ -27,6 +27,7 @@
 
   async function start(onPitch) {
     const ctx = Sound.ensure();
+    Sound.audioSession('play-and-record');
     stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
     srcNode = ctx.createMediaStreamSource(stream);
     analyser = ctx.createAnalyser(); analyser.fftSize = 2048;
@@ -49,6 +50,7 @@
     if (srcNode) try { srcNode.disconnect(); } catch (e) {}
     if (stream) stream.getTracks().forEach((t) => t.stop());
     stream = null;
+    Sound.audioSession('playback');
   }
   // distance in cents from detected midi to nearest instance of target pitch class
   function centsFromPc(midi, pc) {

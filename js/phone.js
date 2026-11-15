@@ -11,9 +11,10 @@
   const PC = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
   const NUM = ['', 'I', 'II', 'III', 'IV'];
   let role = params.get('as') || localStorage.getItem('lr-role-' + room) || '';
-  let view = null, client = null, lastKey = '', pendingReveal = null;
+  let view = null, client = null, lastKey = '', pendingReveal = null, lostT = 0;
   const main = $('#main');
 
+  Sound.audioSession('playback'); // iPhone: play game sounds even when the ringer switch is on silent
   // ---- keep screen awake + unlock audio on first touch ----
   let wakeLock = null;
   async function keepAwake() { try { if ('wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch (e) {} }
@@ -38,7 +39,12 @@
         client.send({ t: 'hello', role });
         if (pendingScan) { const c = pendingScan; pendingScan = ''; setTimeout(() => handleScan(c), 400); }
       },
-      onStatus(ok, text) { const c = $('#conn'); c.classList.toggle('ok', ok); c.querySelector('span').textContent = ok ? 'TV' : text; },
+      onStatus(ok, text) {
+        const c = $('#conn'); c.classList.toggle('ok', ok); c.querySelector('span').textContent = ok ? 'TV' : text;
+        clearTimeout(lostT);
+        if (ok || client && client.stopped) $('#lostov').classList.add('hidden');
+        else if (view) lostT = setTimeout(() => { if (!client.connected && !client.stopped) $('#lostov').classList.remove('hidden'); }, 3500);
+      },
       onMessage(m) {
         if (m.t === 'view') { view = m.view; render(); }
         else if (m.t === 'replaced') {
@@ -60,7 +66,7 @@
   function flash(m) {
     if (m.kind === 'page') { pendingReveal = m.text; closeScanner(); tryReveal(); return; }
     toast(m.text, m.kind === 'good');
-    if (m.kind === 'bad' && navigator.vibrate) navigator.vibrate([80, 60, 80]);
+    if (m.kind === 'bad') vib([80, 60, 80]);
   }
   function tryReveal() {
     if (!pendingReveal || !view) return;
@@ -82,6 +88,8 @@
     const ps = view ? view.pages : [];
     openSheet('Your pages', ps.length ? ps.map(pageCard).join('') + `<p class="center muted">${view.other} has their own pages on their phone.</p>` : `<p class="muted center">You haven’t found any pages yet.</p>`);
   };
+  $('#pausebtn').onclick = () => send({ t: 'pause', on: true });
+  $('#resumebtn').onclick = () => send({ t: 'pause', on: false });
   $('#hintbtn').onclick = () => {
     if (!view || !view.hint) return;
     if (view.hint.canSkip) {
@@ -139,6 +147,9 @@
 
   function render() {
     const v = view, w = v.widget;
+    $('#pausedov').classList.toggle('hidden', !v.paused);
+    $('#pausebtn').classList.toggle('hidden', !v.canPause);
+    if (v.paused) { stopSing(); closeScanner(); }
     $('#footer').classList.toggle('hidden', ['lobby', 'hide', 'end'].includes(v.phase));
     $('#pagecount').textContent = v.pages.length;
     const hb = $('#hintbtn');

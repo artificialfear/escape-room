@@ -65,6 +65,16 @@ with sync_playwright() as p:
         pg.click('[data-d="ok"]'); tv.wait_for_timeout(400)
     code(ph['emily'], '0000'); shot(tv, 'tv-lock-wrong'); shot(ph['emily'], 'emily-lock-wrong')
     ph['mat'].click('#hintbtn'); tv.wait_for_timeout(400); shot(tv, 'tv-hint1')
+    # pause: inputs are ignored, timer stops, both screens show it
+    ph['mat'].click('#pausebtn'); tv.wait_for_timeout(500)
+    assert G()['paused'] and tv.is_visible('#paused') and ph['emily'].is_visible('#pausedov'), 'pause'
+    shot(tv, 'tv-paused'); shot(ph['emily'], 'emily-paused')
+    e0 = tv.evaluate('window.__game.elapsed()'); tv.wait_for_timeout(1500); e1 = tv.evaluate('window.__game.elapsed()')
+    assert abs(e1 - e0) < 0.05, ('timer ran while paused', e0, e1)
+    ph['emily'].evaluate("document.getElementById('pausedov').classList.add('hidden')")
+    code(ph['emily'], ''.join(map(str, g['lock']))); assert not G()['solved'], 'input accepted while paused'
+    ph['emily'].click('#resumebtn') if ph['emily'].is_visible('#resumebtn') else ph['emily'].evaluate("document.getElementById('resumebtn').click()")
+    tv.wait_for_timeout(400); assert not G()['paused'] and not tv.is_visible('#paused'), 'resume'
     code(ph['emily'], ''.join(map(str, g['lock']))); assert G()['solved']
     shot(tv, 'tv-lock-after')
     cont(); assert G()['phase'] == 'hunt1'; tv.wait_for_timeout(2500); shot(tv, 'tv-hunt1'); shot(ph['emily'], 'emily-hunt1')
@@ -105,6 +115,12 @@ with sync_playwright() as p:
     tv.wait_for_timeout(300); assert G()['solved'], 'harmony'
     cont(); assert G()['phase'] == 'rhythm'; tv.wait_for_timeout(2500)
     shot(tv, 'tv-rhythm'); shot(ph['mat'], 'mat-rhythm'); shot(ph['emily'], 'emily-rhythm')
+    # a phone drops off: TV shows a banner after a grace period, and it clears when the phone comes back
+    ph['emily'].close(); tv.wait_for_timeout(20000)
+    assert tv.is_visible('#banner') and 'Emily' in tv.text_content('#banner'), 'banner'
+    shot(tv, 'tv-banner')
+    ph['emily'] = mk(390, 844, True); ph['emily'].goto(BASE + 'play.html?r=' + room + '&as=emily'); tv.wait_for_timeout(1500)
+    assert not tv.is_visible('#banner'), 'banner should clear'
     ph['mat'].fill('#word', 'wrong'); ph['mat'].click('#wordgo'); tv.wait_for_timeout(300)
     ph['mat'].fill('#word', g['word'].lower()); ph['mat'].click('#wordgo'); tv.wait_for_timeout(300); assert G()['solved'], 'rhythm'
     shot(tv, 'tv-rhythm-after')

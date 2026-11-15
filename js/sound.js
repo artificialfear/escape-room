@@ -4,8 +4,10 @@
   const NOTE_NAMES = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
   const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
 
+  function audioSession(type) { try { if (navigator.audioSession && navigator.audioSession.type !== type) navigator.audioSession.type = type; } catch (e) {} }
   function ensure() {
     if (!ctx) {
+      audioSession('playback');
       const AC = window.AudioContext || window.webkitAudioContext;
       ctx = new AC();
       master = ctx.createGain();
@@ -161,5 +163,5 @@
   }
   function stopAmbient() { if (ambient) ambient.stop(); }
 
-  window.Sound = { ctx: () => ensure(), master: () => (ensure(), master), out, ambientOn: () => !!ambient, ensure, unlocked, bell, key, hum, melody, chime, bigChime, wrong, whoosh, creak, thunder, heartbeat, startAmbient, stopAmbient, mtof, NOTE_NAMES };
+  window.Sound = { audioSession, ctx: () => ensure(), master: () => (ensure(), master), out, ambientOn: () => !!ambient, ensure, unlocked, bell, key, hum, melody, chime, bigChime, wrong, whoosh, creak, thunder, heartbeat, startAmbient, stopAmbient, mtof, NOTE_NAMES };
 })();

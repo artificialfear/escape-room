@@ -21,6 +21,7 @@
   <footer id="footer" class="hidden">
     <button id="pagesbtn" class="fbtn">Pages <b id="pagecount">0</b></button>
     <button id="hintbtn" class="fbtn hint">Hint</button>
+    <button id="pausebtn" class="fbtn pause" title="Pause the game">❚❚</button>
   </footer>
 </div>
 <div id="sheet" class="sheet hidden"><div class="sheet-in"><div class="sheet-h"><span id="sheet-title"></span><button id="sheet-x" class="x">✕</button></div><div id="sheet-body"></div></div></div>
@@ -31,6 +32,8 @@
   <div class="manual"><input id="manual" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="or type the code"><button id="manualgo" class="btn">Enter</button></div>
 </div></div>
 <div id="toast"></div>
+<div id="pausedov" class="hidden"><div class="cinzel">Paused</div><p>The house holds its breath…</p><button class="btn big primary" id="resumebtn">Resume</button></div>
+<div id="lostov" class="hidden">Reconnecting to the TV… <span>Keep this page open. Your progress is saved.</span></div>
 <canvas id="scancanvas" class="hidden"></canvas>
 <script src="lib/peerjs.min.js"></script>
 <script src="lib/jsQR.js"></script>

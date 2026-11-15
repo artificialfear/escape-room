@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7 — 2026-11-15
+- Pause: a ❚❚ button on either phone (or P / the ⚙ menu on the laptop). It freezes the timer and ignores inputs, the music dims, and both screens show “The house holds its breath…” with Resume. The escape time doesn't count paused time.
+- The TV page keeps the Mac's screen awake while the game is open, so the cast doesn't drop.
+- iPhone: game sounds now play even with the ringer switch on silent. The audio session switches to record mode only while the mic is listening.
+- Connection banners: the TV shows which phone dropped off, or that it's reconnecting to the service, after a short grace period. Phones show “Reconnecting to the TV…”. Progress is always saved.
+
 ## 1.6.1 — 2026-11-15
 - Fixed fast flickering in the background art (seen on the moon). The slow camera drift now moves the art without rescaling it, which stops Chrome from redrawing the whole scene every frame. Each scene layer also gets its own SVG ids, so two scenes never share gradients during a crossfade.
 

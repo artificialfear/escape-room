@@ -150,7 +150,7 @@
       return {
         v: 1, seed, gen: generate(seed), phase: 'lobby', solved: false,
         ready: { mat: false, emily: false }, hideStep: 'mat', hides: {}, foundBy: {},
-        startedAt: null, endedAt: null, hintLv: {}, hintsUsed: 0, skips: 0, lastHint: null, p: {}, conn: { mat: false, emily: false },
+        startedAt: null, endedAt: null, paused: false, pausedAt: null, pausedTotal: 0, hintLv: {}, hintsUsed: 0, skips: 0, lastHint: null, p: {}, conn: { mat: false, emily: false },
       };
     }
     on(ev, fn) { (this.listeners[ev] = this.listeners[ev] || []).push(fn); }
@@ -169,7 +169,7 @@
       if (phase === 'melody' || phase === 'finale') st.p.idx = 0;
       if (phase === 'harmony') st.p.sang = { mat: false, emily: false };
       if (phase === 'lock' || phase === 'rhythm' || phase === 'portraits') st.p.tries = 0;
-      if (phase === 'end') { st.endedAt = Date.now(); this.sound('ending'); }
+      if (phase === 'end') { if (st.paused) this.setPaused(false); st.endedAt = Date.now(); this.sound('ending'); }
       this.sound('enter', phase);
       if (phase === 'hunt1' || phase === 'hunt2') this.checkHunt();
       this.changed();
@@ -192,8 +192,24 @@
     }
 
     // ---- input ----
+    // seconds of actual play (pauses don't count)
+    elapsed(now = Date.now()) {
+      const st = this.st; if (!st.startedAt) return 0;
+      const end = st.endedAt || (st.paused ? st.pausedAt : now);
+      return Math.max(0, (end - st.startedAt - (st.pausedTotal || 0)) / 1000);
+    }
+    canPause() { const st = this.st; return !!st.startedAt && !st.endedAt; }
+    setPaused(on) {
+      const st = this.st;
+      if (on && !st.paused && this.canPause()) { st.paused = true; st.pausedAt = Date.now(); if (st.p.hold) st.p.hold = { mat: 0, emily: 0 }; }
+      else if (!on && st.paused) { st.pausedTotal = (st.pausedTotal || 0) + (Date.now() - st.pausedAt); st.paused = false; st.pausedAt = null; }
+      else return;
+      this.emit('pause', st.paused); this.changed();
+    }
     handle(role, m) {
       const st = this.st, g = this.g, ph = st.phase;
+      if (m.t === 'pause') { this.setPaused(!!m.on); return; }
+      if (st.paused && m.t !== 'testsound') return; // the house holds its breath
       switch (m.t) {
         case 'ready':
           if (ph !== 'lobby') return;
@@ -301,6 +317,7 @@
     }
     tick() {
       const st = this.st;
+      if (st.paused) return null;
       if ((st.phase === 'seance' || st.phase === 'release') && !st.solved) {
         const h = st.p.hold;
         if (h.mat && h.emily) {
@@ -319,7 +336,7 @@
     viewFor(role) {
       const st = this.st, g = this.g, ph = st.phase, o = other(role);
       const v = {
-        role, name: NAME[role], other: NAME[o], phase: ph, solved: st.solved,
+        role, name: NAME[role], other: NAME[o], phase: ph, solved: st.solved, paused: !!st.paused, canPause: this.canPause(),
         otherConnected: !!st.conn[o], act: (STORY[ph] || {}).act || '', title: (STORY[ph] || {}).title || '',
         prompt: '', info: '', widget: { type: 'watch' },
         pages: Object.keys(st.foundBy).filter((c) => st.foundBy[c] === role).map((c) => Object.assign({ code: c }, g.fragments[c])).sort((a, b) => a.num - b.num),
