@@ -52,7 +52,12 @@
     if (!role && kind === 'bad') showFlash(text);
   });
   game.on('shake', () => { const s = $('#stage'); s.classList.remove('shake'); void s.offsetWidth; s.classList.add('shake'); });
-  game.on('sound', ({ name, arg }) => playSound(name, arg));
+  game.on('sound', ({ name, arg }) => {
+    if (name === 'solve' || name === 'bigsolve') Scenes.shimmer();
+    if (name === 'wrong') { Scenes.lightning(); if (Sound.unlocked()) Sound.thunder(0.35); }
+    if (name === 'hint') Scenes.ghost('left', 8000, .55);
+    playSound(name, arg);
+  });
 
   function ghostMidi(pc) { return pc <= 5 ? 60 + pc : 48 + pc; }
 
@@ -116,12 +121,31 @@
 
 
   // ---------- rendering ----------
-  let lastKey = '';
+  let lastKey = '', lastPhase = null;
   function render() {
     const st = game.st;
     const key = [st.phase, st.solved, st.hideStep].join('|');
-    if (key !== lastKey) { lastKey = key; renderStage(); }
+    if (key !== lastKey) {
+      const first = lastKey === '';
+      lastKey = key;
+      const scene = Scenes.sceneForPhase(st.phase);
+      const phaseChanged = st.phase !== lastPhase; lastPhase = st.phase;
+      const show = () => { Scenes.setScene(scene, first); renderStage(); stageMoments(st.phase, st.solved); updateDynamic(); };
+      if (first) show();
+      else if (phaseChanged) Scenes.transition(scene !== Scenes.current ? 'ink' : 'snuff', show);
+      else show();
+    }
     updateDynamic();
+  }
+  // Eleanor's appearances tied to story beats
+  let momentT = 0;
+  function stageMoments(ph, solved) {
+    clearTimeout(momentT);
+    if (ph === 'intro') { Scenes.hideGhost(); momentT = setTimeout(() => Scenes.ghost('right', 12000, .8), 5200); }
+    else if (ph === 'release' && !solved) Scenes.ghost('center', 0, 1);
+    else if (ph === 'end') { Scenes.ghost('center', 0, 1); momentT = setTimeout(() => Scenes.hideGhost(true), 2600); }
+    else if (solved) momentT = setTimeout(() => Scenes.ghost(Math.random() < .5 ? 'left' : 'right', 7000, .65), 600);
+    else Scenes.hideGhost(); // she keeps out of the way while you work
   }
   function storyBlock(ph, withPrompt) {
     const s = STORY[ph];
@@ -205,7 +229,7 @@
         const f = g.family;
         const fam = ['A', 'B', 'C', 'D'].map((k) => f[k]).sort((a, b) => a.name.localeCompare(b.name));
         prompt = 'Seat the family where they belong';
-        vis = `<div><div class="family">${fam.map((p) => `<div class="portrait"><div class="frame"><span class="cinzel">${p.name[0]}</span></div><div class="pn">${p.name}</div><div class="pi">${p.inst}</div></div>`).join('')}</div><div class="chairs">${[1, 2, 3, 4].map((n) => `<div>Chair ${n}</div>`).join('')}</div><div class="note-sm">Chairs are numbered 1 to 4, from left to right.</div><div class="tries" id="tries"></div></div>`;
+        vis = `<div><div class="family">${fam.map((p) => `<div class="portrait"><div class="frame"><span class="cinzel">${p.name[0]}</span></div><div class="pn">${p.name}</div><div class="pi">${p.inst}</div></div>`).join('')}</div><div class="note-sm">The portraits are leaning against the wall in no particular order. The four chairs behind them are numbered 1 to 4, from left to right.</div><div class="tries" id="tries"></div></div>`;
         break;
       }
       case 'finale':
@@ -270,6 +294,7 @@
       const left = 60 * 60 - el;
       t.textContent = st.endedAt ? fmt(el) : (left >= 0 ? fmt(left) : fmt(-left));
       t.classList.toggle('over', left < 0 && !st.endedAt);
+      Scenes.tension(st.endedAt ? 0 : left < 0 ? 2 : left < 600 ? 1 : 0);
       t.title = left < 0 ? 'Over the hour — keep going!' : 'Time remaining';
     } else t.textContent = '';
     const p = game.tick();

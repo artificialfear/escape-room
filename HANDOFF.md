@@ -19,6 +19,10 @@ A static GitHub Pages app. `index.html` is the TV/host and runs the game. `play.
 - Loop points are in `sounds/loops.json`, in seconds within the processed file. The files are cut at the loop end, and the 0.45–1.5 s before the loop end is pre-blended with the audio just before the loop start (an equal-power crossfade baked into the file). Candidates were found with `tools/find_loops.py` (feature similarity plus onset alignment) and checked visually on spectrograms. Chrome decodes these files sample-exactly, offset 0 compared with ffmpeg.
 - The fizzle (sfx_reset) was a 4 s sustained sound, shortened to 1.4 s with a fade-out. The climax sting's 5.6 s silent tail was removed. The TV test sound's long tail was trimmed.
 
+## Scene art (v1.6)
+- `js/scenes.js` and `css/scenes.css` hold the SVG scenes (exterior, hallway, parlor, musicroom, attic, dawn), keyed by phase (`PHASE_SCENE`). They also hold the Eleanor ghost (`ghost(pos, ms, strength)` and `hideGhost(rise)`), transitions (`transition('ink'|'snuff', cb)`; the stage re-renders while the screen is covered), `lightning()`, `shimmer()` and `tension(0|1|2)`.
+- `tv.js` `render()` drives the transitions and `stageMoments()` drives Eleanor's beats. The game's sound events trigger the visual effects. `tests/scenes_test.py` screenshots every scene and effect.
+
 ## Testing
 `python3 tests/playthrough.py` plays the whole game with the TV and both phones in Playwright, using a fake PeerJS built on BroadcastChannel (`tests/fakepeer.js`). `tests/soundboard_test.py` covers the soundboard. Screenshots go to `tests/shots/`, which git ignores.
 

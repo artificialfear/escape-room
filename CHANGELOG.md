@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6 — 2026-11-15
+- Animated scene art behind every screen: the house at night (Savannah live oaks with Spanish moss), the hallway, the parlor, the music room (rain on the window), the attic (moonbeam and dust), and dawn for the ending. Includes candle flicker, drifting dust, slow camera drift and clouds.
+- Eleanor appears as a ghost at story moments and with hints, then rises away at the end.
+- Scene transitions: ink bleeds across the screen between places, and a candle snuffs out between scenes in the same place.
+- Event effects: lightning and thunder on wrong answers, a golden shimmer when you solve something, and the edges darken as time runs low (red when you're over the hour).
+
 ## 1.5 — 2026-11-15
 - Removed the test QR code from the TV's join screen. The phone's Test camera now checks against any printed page, without registering it or revealing anything.
 

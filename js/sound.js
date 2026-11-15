@@ -118,6 +118,14 @@
     const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 2;
     o.connect(f); f.connect(g); out(g, 0.6); o.start(t); o.stop(t + 1.2); am.start(t); am.stop(t + 1.2);
   }
+  function thunder(vol = 0.5) {
+    const c = ensure(); const t = c.currentTime + 0.25;
+    const s = c.createBufferSource(); s.buffer = noiseBuf(4);
+    const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(120, t + 2.5);
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.08);
+    g.gain.exponentialRampToValueAtTime(vol * 0.4, t + 0.6); g.gain.exponentialRampToValueAtTime(vol * 0.6, t + 0.9); g.gain.exponentialRampToValueAtTime(0.0001, t + 3.6);
+    s.connect(f); f.connect(g); out(g, 0.6); s.start(t);
+  }
   function heartbeat() {
     const c = ensure();
     [0, 0.28].forEach((d) => {
@@ -153,5 +161,5 @@
   }
   function stopAmbient() { if (ambient) ambient.stop(); }
 
-  window.Sound = { ctx: () => ensure(), master: () => (ensure(), master), out, ambientOn: () => !!ambient, ensure, unlocked, bell, key, hum, melody, chime, bigChime, wrong, whoosh, creak, heartbeat, startAmbient, stopAmbient, mtof, NOTE_NAMES };
+  window.Sound = { ctx: () => ensure(), master: () => (ensure(), master), out, ambientOn: () => !!ambient, ensure, unlocked, bell, key, hum, melody, chime, bigChime, wrong, whoosh, creak, thunder, heartbeat, startAmbient, stopAmbient, mtof, NOTE_NAMES };
 })();
