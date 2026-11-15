@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.6.1 — 2026-11-15
+- Fixed fast flickering in the background art (seen on the moon). The slow camera drift now moves the art without rescaling it, which stops Chrome from redrawing the whole scene every frame. Each scene layer also gets its own SVG ids, so two scenes never share gradients during a crossfade.
+
 ## 1.6 — 2026-11-15
 - Animated scene art behind every screen: the house at night (Savannah live oaks with Spanish moss), the hallway, the parlor, the music room (rain on the window), the attic (moonbeam and dust), and dawn for the ending. Includes candle flicker, drifting dust, slow camera drift and clouds.
 - Eleanor appears as a ghost at story moments and with hints, then rises away at the end.

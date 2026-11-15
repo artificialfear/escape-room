@@ -284,7 +284,9 @@
     if (name === current) return;
     current = name;
     const next = layerA.classList.contains('on') ? layerB : layerA, prev = next === layerA ? layerB : layerA;
-    next.innerHTML = SCENES[name]();
+    // give each layer's SVG its own ids, so two scenes on screen during a crossfade never share gradient ids
+    const pre = next === layerA ? 'a-' : 'b-';
+    next.innerHTML = SCENES[name]().replace(/id="([^"]+)"/g, `id="${pre}$1"`).replace(/url\(#([^)]+)\)/g, `url(#${pre}$1)`);
     next.dataset.scene = name;
     if (instant) next.style.transition = 'none';
     requestAnimationFrame(() => { next.classList.add('on'); prev.classList.remove('on'); setTimeout(() => { next.style.transition = ''; }, 50); });
