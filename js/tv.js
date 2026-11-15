@@ -55,32 +55,65 @@
   game.on('sound', ({ name, arg }) => playSound(name, arg));
 
   function ghostMidi(pc) { return pc <= 5 ? 60 + pc : 48 + pc; }
+
+  // ---------- music & custom sounds (see Soundboard) ----------
+  const MUSIC_FOR = { lobby: 'music_title', hide: 'music_hiding', intro: 'music_act1', seance: 'music_act1', lock: 'music_act1', hunt1: 'music_act1', melody: 'music_act2', harmony: 'music_act2', rhythm: 'music_act2', hunt2: 'music_act2', portraits: 'music_act3', finale: 'music_act3', release: 'music_act3' };
+  const DUCK = { melody: 0.12, harmony: 0.05, finale: 0.12, release: 0.6 };
+  const SYNTH_LEVEL = { hide: 0.5, release: 0.6 };
+  function applyMusic() {
+    if (!Sound.unlocked()) return;
+    const ph = game.st.phase;
+    if (ph === 'end') return;
+    AudioBank.setDuck(DUCK[ph] || 1);
+    const id = MUSIC_FOR[ph];
+    if (id && AudioBank.has(id)) { Sound.stopAmbient(); AudioBank.music(id); }
+    else { AudioBank.stopMusic(); if (ph === 'lobby') Sound.stopAmbient(); else Sound.startAmbient(SYNTH_LEVEL[ph] || 1); }
+  }
+  AudioBank.loadAll().then(applyMusic);
+  AudioBank.onChange = (slot) => { if (slot.kind === 'music') { AudioBank.stopMusic(0.5); setTimeout(applyMusic, 700); } };
+  const fx = (id, fallback) => { if (!AudioBank.sfx(id)) fallback(); };
+  setInterval(() => {
+    const ph = game.st.phase;
+    if (!Sound.unlocked() || ph === 'lobby' || ph === 'end' || Math.random() > 0.15) return;
+    const house = ['sfx_house1', 'sfx_house2', 'sfx_house3'].filter(AudioBank.has);
+    if (house.length) AudioBank.sfx(house[(Math.random() * house.length) | 0]);
+    else if (!Sound.ambientOn()) Sound.creak();
+  }, 7000);
+
   function playSound(name, arg) {
     if (!Sound.unlocked()) return;
     switch (name) {
       case 'enter':
-        if (arg === 'intro') { Sound.startAmbient(1); Sound.whoosh(0.25); }
-        else if (arg === 'seance') Sound.heartbeat();
+        applyMusic();
+        if (arg === 'intro') fx('sfx_transition', () => Sound.whoosh(0.25));
+        else if (arg === 'seance') fx('sfx_heartbeat', Sound.heartbeat);
         else if (arg === 'melody') setTimeout(() => Sound.melody(game.g.melody), 2500);
         else if (arg === 'harmony') setTimeout(() => Sound.hum(ghostMidi(game.g.ghostPc), 4.5), 2000);
-        else if (arg === 'hunt1' || arg === 'hunt2') Sound.whoosh(0.2);
-        else if (arg === 'rhythm' || arg === 'portraits') Sound.creak();
-        else if (arg === 'release') { Sound.startAmbient(0.6); Sound.heartbeat(); }
-        else if (arg === 'hide') Sound.startAmbient(0.5);
+        else if (arg === 'hunt1' || arg === 'hunt2') fx('sfx_transition', () => Sound.whoosh(0.2));
+        else if (arg === 'rhythm' || arg === 'portraits') fx('sfx_transition', Sound.creak);
+        else if (arg === 'release') fx('sfx_heartbeat', Sound.heartbeat);
         break;
-      case 'solve': Sound.chime(); break;
-      case 'bigsolve': Sound.bigChime(); break;
-      case 'ending': Sound.bigChime(); setTimeout(() => Sound.stopAmbient(), 2500); setTimeout(() => Sound.melody([...game.g.melody, ...game.g.finale.map((pc) => 60 + pc)], 0.7), 4500); break;
-      case 'wrong': Sound.wrong(); break;
-      case 'fizzle': Sound.bell(48, 0, 0.8, 0.15); break;
-      case 'ding': Sound.bell(79, 0, 1.5, 0.25); break;
-      case 'page': [67, 71, 74, 79].forEach((m, i) => Sound.bell(m, i * 0.12, 2, 0.2)); Sound.whoosh(0.12); break;
-      case 'hint': Sound.whoosh(0.18); break;
-      case 'test': Sound.chime(); break;
+      case 'solve': fx('sfx_solve', Sound.chime); break;
+      case 'bigsolve': fx('sfx_climax', Sound.bigChime); break;
+      case 'ending': {
+        fx('sfx_climax', Sound.bigChime);
+        setTimeout(() => { Sound.stopAmbient(); AudioBank.stopMusic(3); }, 2500);
+        const notes = [...game.g.melody, ...game.g.finale.map((pc) => 60 + pc)];
+        setTimeout(() => Sound.melody(notes, 0.7), 4500);
+        setTimeout(() => { AudioBank.setDuck(1); AudioBank.music('music_ending'); }, 4500 + notes.length * 700 + 2000);
+        break;
+      }
+      case 'wrong': fx('sfx_wrong', Sound.wrong); break;
+      case 'fizzle': fx('sfx_reset', () => Sound.bell(48, 0, 0.8, 0.15)); break;
+      case 'ding': fx('sfx_progress', () => Sound.bell(79, 0, 1.5, 0.25)); break;
+      case 'page': fx('sfx_page', () => { [67, 71, 74, 79].forEach((m, i) => Sound.bell(m, i * 0.12, 2, 0.2)); Sound.whoosh(0.12); }); break;
+      case 'hint': fx('sfx_hint', () => Sound.whoosh(0.18)); break;
+      case 'test': fx('sfx_test', Sound.chime); break;
       case 'melody': Sound.melody(arg); break;
       case 'hum': Sound.hum(ghostMidi(arg), 4.5); break;
     }
   }
+
 
   // ---------- rendering ----------
   let lastKey = '';
@@ -108,6 +141,7 @@
           <div class="btns">
             <a class="btn" href="cards.html" target="_blank">Print the pages</a>
             <button class="btn" id="fs">Full screen</button>
+            <a class="btn small" href="soundboard.html" target="_blank">Soundboard</a>
             <button class="btn small" id="newgame">New game (fresh puzzles)</button>
           </div>
           <div class="testbox"><div class="qr">${qrSVG('LR-' + TEST_CODE, 4)}</div><div>Systems check: on your phone, tap <b>Test camera</b> and scan this code, <b>Test microphone</b> and hum, and <b>Test TV sound</b>. These checks reveal nothing about the game.</div></div>
@@ -249,8 +283,7 @@
     localStorage.removeItem(STATE_KEY);
     const conn = game.st.conn;
     game.st = Game.fresh(); game.st.conn = conn;
-    Sound.stopAmbient();
-    lastKey = ''; onChange();
+    lastKey = ''; onChange(); applyMusic();
   }
 
   $('#gear').onclick = () => {
@@ -259,9 +292,8 @@
     if (c === '2') { const ph = game.st.phase; if (ph === 'melody') playSound('melody', game.g.melody); if (ph === 'harmony') playSound('hum', game.g.ghostPc); }
   };
   $('#wakebtn').onclick = () => {
-    Sound.ensure(); $('#wake').remove();
-    const ph = game.st.phase;
-    if (ph !== 'lobby' && ph !== 'end') Sound.startAmbient(ph === 'hide' ? 0.5 : 1);
+    $('#wake').remove();
+    Sound.ensure(); Sound.ctx().resume().then(applyMusic, applyMusic);
   };
   render();
   // expose for automated tests only

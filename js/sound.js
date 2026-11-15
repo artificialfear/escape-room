@@ -153,5 +153,5 @@
   }
   function stopAmbient() { if (ambient) ambient.stop(); }
 
-  window.Sound = { ensure, unlocked, bell, key, hum, melody, chime, bigChime, wrong, whoosh, creak, heartbeat, startAmbient, stopAmbient, mtof, NOTE_NAMES };
+  window.Sound = { ctx: () => ensure(), master: () => (ensure(), master), out, ambientOn: () => !!ambient, ensure, unlocked, bell, key, hum, melody, chime, bigChime, wrong, whoosh, creak, heartbeat, startAmbient, stopAmbient, mtof, NOTE_NAMES };
 })();

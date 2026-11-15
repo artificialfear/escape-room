@@ -13,3 +13,6 @@ A two-player escape room played on a TV with phones as controllers. The game run
 5. When you're both ready, tap **We're ready**. From there the phones guide you.
 
 You need: the laptop and both phones on the same Wi-Fi, the volume up on all devices, and about an hour. The phones' screens should stay on; if one sleeps, reopen the page and it reconnects.
+
+## Custom music & sound effects
+Open **Soundboard** from the TV's join screen and drag audio files onto the slots. Files are saved in that browser. To make them permanent, upload them to `sounds/` named after the slot ID.

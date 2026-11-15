@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Last Recital · Soundboard</title>
+<link rel="stylesheet" href="css/common.css">
+<style>
+  body { font-size: 17px; }
+  .wrap { position: relative; z-index: 2; max-width: 980px; margin: 0 auto; padding: 1.5em 1.2em 4em; }
+  h1 { color: var(--gold2); margin: 0 0 .2em; font-size: 2em; }
+  h2 { color: var(--gold); font-size: 1.05em; letter-spacing: .15em; margin: 2em 0 .6em; }
+  .intro { color: var(--dim); line-height: 1.5; }
+  .intro b { color: var(--ink); }
+  .masters { display: flex; gap: 2em; flex-wrap: wrap; margin: 1.2em 0; padding: 1em 1.2em; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+  .masters label { display: flex; align-items: center; gap: .7em; font-family: "Cinzel", serif; font-size: .85em; }
+  .row { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: .9em 1.1em; margin: .6em 0; transition: border-color .2s, background .2s; }
+  .row.drag { border-color: var(--ghost); background: rgba(143,201,192,.08); }
+  .top { display: flex; align-items: center; gap: .8em; flex-wrap: wrap; }
+  .lbl { font-family: "Cinzel", serif; font-weight: 700; color: var(--ink); }
+  .id { font-family: ui-monospace, Menlo, monospace; font-size: .75em; color: var(--dim); }
+  .chip { margin-left: auto; font-size: .78em; padding: .2em .7em; border-radius: 1em; border: 1px solid var(--line); color: var(--dim); white-space: nowrap; max-width: 22em; overflow: hidden; text-overflow: ellipsis; }
+  .chip.local { border-color: var(--ghost); color: var(--ghost); }
+  .chip.repo { border-color: var(--gold); color: var(--gold2); }
+  .chip.err { border-color: var(--blood); color: #e9a090; }
+  .desc { color: var(--dim); margin: .35em 0 .7em; line-height: 1.4; font-size: .95em; }
+  .ctrl { display: flex; align-items: center; gap: .5em; flex-wrap: wrap; }
+  .b { background: transparent; border: 1px solid var(--line); color: var(--ink); padding: .4em .8em; border-radius: 7px; font-size: .85em; }
+  .b:hover { border-color: var(--gold); }
+  .b.gold { border-color: var(--gold); color: var(--gold2); }
+  .b.red { color: #e9a090; }
+  .vol { display: flex; align-items: center; gap: .4em; margin-left: auto; font-size: .8em; color: var(--dim); }
+  input[type=range] { accent-color: var(--gold); width: 120px; }
+  .note { font-size: .9em; color: var(--dim); border-left: 3px solid var(--gold); padding: .4em .9em; margin: 1em 0; line-height: 1.5; }
+  code { font-family: ui-monospace, Menlo, monospace; font-size: .9em; color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="fog"></div><div class="vignette"></div>
+<div class="wrap">
+  <h1 class="cinzel">Soundboard</h1>
+  <div class="intro">
+    <p>Give the game your own music and sound effects. <b>Drag an audio file onto a slot</b> (or click <b>Choose file</b>). If you leave a slot empty, the game keeps its built-in sound. mp3, m4a, ogg and wav files all work.</p>
+    <p>Changes take effect right away, even in a game tab that’s already open. Nothing here reveals any puzzles.</p>
+  </div>
+  <div class="note">
+    <b>Where files are kept:</b> files you add here are saved <b>in this browser on this computer</b>, so open the game from the same Chrome on the same Mac. To make a sound permanent and portable instead, upload it to the repo’s <code>sounds/</code> folder named exactly like the slot ID (for example <code>sounds/music_act1.mp3</code>). If both exist, the file added here wins.<br>
+    A few musical sounds are generated live because the game randomizes them each time, so they can’t be replaced.
+  </div>
+  <div class="masters">
+    <label>Music volume <input type="range" id="mmusic" min="0" max="1" step="0.05"></label>
+    <label>Effects volume <input type="range" id="msfx" min="0" max="1.5" step="0.05"></label>
+    <button class="b" id="stopall">■ Stop everything</button>
+  </div>
+  <h2 class="cinzel">MUSIC</h2>
+  <div id="music"></div>
+  <h2 class="cinzel">SOUND EFFECTS</h2>
+  <div id="sfx"></div>
+</div>
+<script src="js/sound.js"></script>
+<script src="js/audiobank.js"></script>
+<script src="js/soundboard.js"></script>
+</body>
+</html>
