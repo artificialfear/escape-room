@@ -150,7 +150,7 @@
       return {
         v: 1, seed, gen: generate(seed), phase: 'lobby', solved: false,
         ready: { mat: false, emily: false }, hideStep: 'mat', hides: {}, foundBy: {},
-        startedAt: null, endedAt: null, paused: false, pausedAt: null, pausedTotal: 0, hintLv: {}, hintsUsed: 0, skips: 0, lastHint: null, p: {}, conn: { mat: false, emily: false },
+        startedAt: null, endedAt: null, paused: false, pausedAt: null, pausedTotal: 0, log: {}, hintLv: {}, hintsUsed: 0, skips: 0, lastHint: null, p: {}, conn: { mat: false, emily: false },
       };
     }
     on(ev, fn) { (this.listeners[ev] = this.listeners[ev] || []).push(fn); }
@@ -169,15 +169,18 @@
       if (phase === 'melody' || phase === 'finale') st.p.idx = 0;
       if (phase === 'harmony') st.p.sang = { mat: false, emily: false };
       if (phase === 'lock' || phase === 'rhythm' || phase === 'portraits') st.p.tries = 0;
+      if (PUZZLES.includes(phase)) { st.log = st.log || {}; st.log[phase] = { start: this.elapsed(), end: null, hints: 0, skipped: false }; }
       if (phase === 'end') { if (st.paused) this.setPaused(false); st.endedAt = Date.now(); this.sound('ending'); }
       this.sound('enter', phase);
       if (phase === 'hunt1' || phase === 'hunt2') this.checkHunt();
       this.changed();
     }
     next() { const i = PHASES.indexOf(this.st.phase); if (i < PHASES.length - 1) this.goto(PHASES[i + 1]); }
+    logEntry() { const st = this.st; st.log = st.log || {}; return st.log[st.phase] || (st.log[st.phase] = { start: this.elapsed(), end: null, hints: 0, skipped: false }); }
     solve(skipped) {
       if (this.st.solved) return;
       if (skipped) this.st.skips++;
+      if (PUZZLES.includes(this.st.phase)) { const e = this.logEntry(); e.end = this.elapsed(); if (skipped) e.skipped = true; }
       if (this.st.phase === 'release') { this.goto('end'); return; }
       this.st.solved = true; this.st.lastHint = null;
       this.sound(this.st.phase === 'finale' ? 'bigsolve' : 'solve');
@@ -300,7 +303,7 @@
       const k = this.hintKey(role);
       const lv = st.hintLv[k] || 0;
       if (lv >= 2) return;
-      st.hintLv[k] = lv + 1; st.hintsUsed++;
+      st.hintLv[k] = lv + 1; st.hintsUsed++; this.logEntry().hints++;
       if (!ph.startsWith('hunt')) { st.lastHint = { level: lv + 1, text: HINTS[ph](this.g)[lv] }; this.sound('hint'); }
       this.changed();
     }
@@ -310,7 +313,7 @@
       if ((st.hintLv[this.hintKey(role)] || 0) < 2) return;
       if (ph.startsWith('hunt')) {
         const t = this.huntTarget(role);
-        if (!st.foundBy[t.code]) { st.foundBy[t.code] = role; st.skips++; this.flash(role, 'page', t.code); this.changed(); this.checkHunt(); }
+        if (!st.foundBy[t.code]) { st.foundBy[t.code] = role; st.skips++; this.logEntry().skipped = true; this.flash(role, 'page', t.code); this.changed(); this.checkHunt(); }
         return;
       }
       this.solve(true);
@@ -331,6 +334,25 @@
     }
 
     holdProgress() { const h = this.st.p.hold; if (!h || !h.mat || !h.emily) return 0; return Math.min(1, (Date.now() - Math.max(h.mat, h.emily)) / 3000); }
+
+    // ---- end-of-game program ----
+    program() {
+      const st = this.st, log = st.log || {};
+      const rows = PUZZLES.map((ph) => { const e = log[ph] || {}; return { title: STORY[ph].title, act: STORY[ph].act, secs: e.end != null && e.start != null ? Math.max(0, Math.round(e.end - e.start)) : null, hints: e.hints || 0, skipped: !!e.skipped }; });
+      return { rows, total: Math.round(this.elapsed()), hints: st.hintsUsed, skips: st.skips, rating: this.rating() };
+    }
+    rating() {
+      const st = this.st, mins = this.elapsed() / 60, score = mins + 3 * st.hintsUsed + 8 * st.skips;
+      const tiers = [
+        [40, 5, 'Maestro', 'A standing ovation from beyond the grave.'],
+        [55, 4, 'Virtuoso', 'Eleanor would have given you a solo.'],
+        [70, 3, 'First Chair', 'Steady hands, sharp ears. A fine performance.'],
+        [90, 2, 'Section Player', 'You found your way through — with a little help from the conductor.'],
+        [Infinity, 1, 'Tone-Deaf Intruder', 'Eleanor is grateful… and only slightly concerned.'],
+      ];
+      const t = tiers.find((x) => score <= x[0]);
+      return { title: t[2], stars: t[1], blurb: t[3], clean: st.hintsUsed === 0 && st.skips === 0 };
+    }
 
     // ---- what each phone sees ----
     viewFor(role) {
@@ -353,7 +375,7 @@
         else v.widget = { type: 'wait', text: `${NAME[st.hideStep]} is hiding pages. Stay in the living room and don’t peek!` };
         return v;
       }
-      if (ph === 'end') { v.widget = { type: 'end' }; return v; }
+      if (ph === 'end') { v.widget = { type: 'end', program: this.program() }; return v; }
       if (st.solved || ph === 'intro') { v.widget = { type: 'continue', label: ph === 'intro' ? 'Enter the house' : 'Continue' }; v.prompt = 'Read the TV together, then continue.'; return v; }
 
       switch (ph) {

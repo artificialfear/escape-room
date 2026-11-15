@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="css/tv.css">
 <link rel="stylesheet" href="css/scenes.css">
 </head>
-<body>
+<body class="asleep">
 <div class="fog"></div><div class="fog b"></div><div class="vignette"></div>
 <div id="app">
   <div class="topbar">
@@ -27,9 +27,12 @@
 <div id="paused" class="hidden"><div class="cinzel">Paused</div><p>The house holds its breath…</p><p class="small">Tap <b>Resume</b> on either phone (or press P on the laptop).</p></div>
 <div id="flash"></div>
 <div id="wake">
-  <h1 class="cinzel" style="color:var(--gold2);font-size:2.4em;margin:0">The Last Recital</h1>
-  <p>Click to wake the house. (This turns on the sound — browsers need one click first.)</p>
-  <button class="btn primary" id="wakebtn">Wake the house</button>
+  <div class="wake-in">
+    <div class="wake-asleep">The house is asleep.</div>
+    <h1 class="cinzel">The Last Recital</h1>
+    <button class="btn primary" id="wakebtn">Wake the house</button>
+    <p class="wake-note">This also turns on the sound. Browsers need one click first.</p>
+  </div>
 </div>
 <script src="lib/peerjs.min.js"></script>
 <script src="lib/qrcode.js"></script>

@@ -116,7 +116,7 @@ with sync_playwright() as p:
     cont(); assert G()['phase'] == 'rhythm'; tv.wait_for_timeout(2500)
     shot(tv, 'tv-rhythm'); shot(ph['mat'], 'mat-rhythm'); shot(ph['emily'], 'emily-rhythm')
     # a phone drops off: TV shows a banner after a grace period, and it clears when the phone comes back
-    ph['emily'].close(); tv.wait_for_timeout(20000)
+    ph['emily'].close(); tv.wait_for_timeout(24000)
     assert tv.is_visible('#banner') and 'Emily' in tv.text_content('#banner'), 'banner'
     shot(tv, 'tv-banner')
     ph['emily'] = mk(390, 844, True); ph['emily'].goto(BASE + 'play.html?r=' + room + '&as=emily'); tv.wait_for_timeout(1500)
@@ -143,6 +143,7 @@ with sync_playwright() as p:
     for r in ph: ph[r].dispatch_event('#hold', 'pointerdown')
     tv.wait_for_timeout(3600); assert G()['phase'] == 'end', G()['phase']
     tv.wait_for_timeout(5500); shot(tv, 'tv-end'); shot(ph['mat'], 'mat-end')
+    tv.wait_for_timeout(9000); assert tv.query_selector('.program'), 'program screen'; shot(tv, 'tv-program')
     # persistence: reload TV mid-game state survives
     tv.reload(); tv.click('#wakebtn'); tv.wait_for_timeout(800); assert G()['phase'] == 'end'
     st = G(); print('hints', st['hintsUsed'], 'skips', st['skips'])

@@ -200,7 +200,9 @@
       case 'watch':
         h = header(v) + `<div class="panel center muted">Watch the TV.</div>`; break;
       case 'end':
-        h = `<div class="title center" style="margin-top:1em">The End</div><div class="panel center prompt">You set Eleanor free. Look at the TV for your escape time.<br><br>Thank you for playing <i>The Last Recital</i>.</div>`; break;
+        { const pr = w.program, mm = (t) => Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+          h = `<div class="title center" style="margin-top:1em">The End</div><div class="panel center prompt">You set Eleanor free.<br><br><span style="font-size:1.6em;color:var(--gold2)">${'★'.repeat(pr.rating.stars)}${'☆'.repeat(5 - pr.rating.stars)}</span><br><b class="cinzel" style="font-size:1.3em">${pr.rating.title}</b><br><i>${pr.rating.blurb}</i><br><br>Escape time <b>${mm(pr.total)}</b> · ${pr.hints} hints · ${pr.skips} skips<br><br><span class="muted">The full program is on the TV.</span></div>`; }
+        break;
       case 'hold':
         h = header(v) + `<button class="holdbtn" id="hold"><div class="candle"><div class="wick"></div><div class="flame"></div><div class="wax"></div></div>${w.label}</button>
           <p class="center muted" id="theirs"></p><div class="bar"><div id="prog"></div></div>`;

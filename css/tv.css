@@ -118,8 +118,6 @@ body { font-size: clamp(16px, 1.55vw, 34px); }
 .endstats { display: flex; gap: 3em; justify-content: center; margin-top: 1.6em; font-family: "Cinzel", serif; }
 .endstats div { text-align: center; } .endstats b { display: block; font-size: 2em; color: var(--gold2); } .endstats span { color: var(--dim); font-size: .75em; letter-spacing: .15em; }
 
-#wake { position: fixed; inset: 0; z-index: 20; background: rgba(5,4,7,.92); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 1em; text-align: center; }
-#wake p { color: var(--dim); max-width: 34em; }
 
 #banner { position: fixed; top: 3.2em; left: 50%; transform: translateX(-50%); z-index: 9; max-width: 70vw; padding: .6em 1.2em; border-radius: 8px; background: rgba(70,40,10,.95); border: 1px solid var(--gold); color: #ffe9c2; font-size: .85em; text-align: center; line-height: 1.5; }
 #paused { position: fixed; inset: 0; z-index: 7; background: rgba(4,3,6,.78); backdrop-filter: blur(3px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
@@ -128,3 +126,48 @@ body { font-size: clamp(16px, 1.55vw, 34px); }
 #paused p.small { font-size: .8em; font-style: normal; color: var(--dim); }
 @keyframes breathe { 0%,100% { opacity: .7; } 50% { opacity: 1; } }
 .topbar .timer.paused { color: var(--dim); animation: breathe 2s ease-in-out infinite; }
+
+/* end-of-game concert program */
+.program { --paper: #f1e5c8; background: radial-gradient(ellipse at 40% 20%, #f8f0dc, #ead9b2 70%, #d8c08e); color: #2b1d10; width: min(62em, 90vw); max-height: 86vh; overflow: hidden; padding: 1.4em 2.4em 1.2em; border-radius: 4px; box-shadow: 0 0 80px rgba(0,0,0,.8), inset 0 0 50px rgba(120,80,30,.35); text-align: center; font-size: .78em; }
+.pg-head { font-family: "Cinzel", serif; letter-spacing: .35em; font-size: .75em; color: #6b4a2a; }
+.pg-title { font-family: "Fell", serif; font-style: italic; font-size: 2.6em; line-height: 1.1; margin-top: .1em; }
+.pg-sub { font-style: italic; color: #4a3220; }
+.pg-rule { height: 1px; margin: .7em auto; width: 70%; background: linear-gradient(90deg, transparent, #6b4a2a, transparent); }
+.pg-rows { text-align: left; }
+.pg-act { font-family: "Cinzel", serif; font-size: .78em; letter-spacing: .25em; color: #7a5230; margin: .5em 0 .1em; text-transform: uppercase; }
+.pg-row { display: flex; align-items: baseline; gap: .5em; line-height: 1.55; }
+.pg-t { font-family: "Fell", serif; font-size: 1.15em; }
+.pg-h { color: #8a2b2b; letter-spacing: .1em; }
+.pg-s { font-style: italic; font-size: .85em; color: #8a2b2b; }
+.pg-dots { flex: 1; border-bottom: 1.5px dotted #8a6a44; transform: translateY(-.3em); }
+.pg-time { font-family: "Cinzel", serif; font-variant-numeric: tabular-nums; }
+.pg-total { display: flex; justify-content: space-between; font-family: "Cinzel", serif; font-size: 1.15em; padding: 0 .2em; }
+.pg-meta { font-style: italic; color: #4a3220; margin-top: .2em; }
+.pg-review { margin-top: .8em; }
+.pg-stars { font-size: 1.6em; color: #9a6a10; letter-spacing: .15em; } .pg-stars .dim { color: #c9b48a; }
+.pg-rank { font-family: "Cinzel", serif; font-weight: 700; font-size: 1.8em; letter-spacing: .08em; color: #3a2412; }
+.pg-blurb { font-style: italic; font-size: 1.1em; }
+.pg-critic { font-family: "Cinzel", serif; font-size: .7em; letter-spacing: .2em; color: #6b4a2a; margin-top: .2em; }
+
+/* "Wake the house" opening */
+#wake { position: fixed; inset: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 12vh; text-align: center;
+  background: linear-gradient(180deg, rgba(3,2,5,.55) 0%, rgba(3,2,5,.25) 35%, rgba(3,2,5,.75) 70%, rgba(3,2,5,.95) 100%); transition: opacity 1.8s ease; }
+#wake.leaving { opacity: 0; pointer-events: none; }
+#wake .wake-in { display: flex; flex-direction: column; align-items: center; gap: .6em; }
+#wake h1 { color: var(--gold2); font-size: 3.4em; margin: 0; text-shadow: 0 0 40px rgba(217,164,65,.35); animation: rise 2s ease both .6s; }
+#wake .wake-asleep { font-style: italic; color: var(--dim); font-size: 1.3em; animation: rise 2s ease both; }
+#wake .btn { font-size: 1em; padding: .7em 1.6em; animation: rise 2s ease both 1.4s; box-shadow: 0 0 30px rgba(217,164,65,.25); }
+#wake .wake-note { color: var(--dim); font-size: .7em; margin: .2em 0 0; animation: rise 2s ease both 1.8s; }
+/* lights out until the house wakes */
+#scene .off { opacity: 0 !important; animation: none !important; }
+#scene rect.off.flick-win, #scene .flick-win.off { opacity: 1 !important; fill: #141a2a; }
+#scene .ignite { animation: ignite .9s steps(1) !important; }
+@keyframes ignite { 0% { opacity: 0; } 15% { opacity: 1; } 25% { opacity: .2; } 40% { opacity: 1; } 55% { opacity: .5; } 70%, 100% { opacity: 1; } }
+
+body.asleep #app, body.asleep #banner { opacity: 0; }
+#app { transition: opacity 2.2s ease; }
+
+.pg-body { display: grid; grid-template-columns: 1.35fr 1fr; gap: 2.2em; align-items: center; }
+.pg-side { border-left: 1px solid rgba(107,74,42,.35); padding-left: 1.8em; }
+.pg-side .pg-total { flex-direction: column; align-items: center; gap: .1em; }
+.pg-side .pg-total b { font-size: 2em; }

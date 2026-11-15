@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8 — 2026-11-15
+- Opening: the TV starts on the sleeping house with its lights out. “Wake the house” brings thunder and a lightning flash, the windows flicker on one by one, the title music begins, and the join screen fades in.
+- Ending: after the epilogue, the TV shows the evening's concert program, with each scene's time, hints (♪), skips, total performance time and a critic's star rating (Tone-Deaf Intruder → Maestro). The phones show the rating too.
+
 ## 1.7 — 2026-11-15
 - Pause: a ❚❚ button on either phone (or P / the ⚙ menu on the laptop). It freezes the timer and ignores inputs, the music dims, and both screens show “The house holds its breath…” with Resume. The escape time doesn't count paused time.
 - The TV page keeps the Mac's screen awake while the game is open, so the cast doesn't drop.

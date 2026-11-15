@@ -195,6 +195,10 @@
     if (ph === 'end') {
       const secs = Math.round(game.elapsed());
       el.innerHTML = `${storyBlock('end')}<div class="endstats fadein" style="animation-delay:4.5s"><div><b>${fmt(secs)}</b><span>ESCAPE TIME</span></div><div><b>${st.hintsUsed}</b><span>HINTS</span></div><div><b>${st.skips}</b><span>SKIPS</span></div></div>`;
+      // after the epilogue, the evening's concert program
+      const delay = Math.max(0, 13000 - (Date.now() - st.endedAt));
+      clearTimeout(programT);
+      programT = setTimeout(() => { if (game.st.phase === 'end') Scenes.transition('snuff', () => { el.innerHTML = programHTML(game.program()); }); }, delay);
       return;
     }
     if (ph === 'intro') { el.innerHTML = storyBlock('intro', 'Tap “Enter the house” when you’re ready'); return; }
@@ -244,6 +248,30 @@
         break;
     }
     el.innerHTML = `${storyBlock(ph)}<div class="visual fadein" style="animation-delay:1.6s">${vis}</div><div class="prompt fadein" style="animation-delay:2.2s">${prompt}</div>`;
+  }
+  let programT = 0;
+  function programHTML(pr) {
+    const stars = '★'.repeat(pr.rating.stars) + '<span class="dim">' + '★'.repeat(5 - pr.rating.stars) + '</span>';
+    let lastAct = '';
+    const rows = pr.rows.map((r) => {
+      const act = r.act !== lastAct ? `<div class="pg-act">${r.act}</div>` : ''; lastAct = r.act;
+      const marks = (r.hints ? `<span class="pg-h">${'♪'.repeat(r.hints)}</span>` : '') + (r.skipped ? '<span class="pg-s">with Eleanor’s help</span>' : '');
+      return `${act}<div class="pg-row"><span class="pg-t">${r.title}</span>${marks}<span class="pg-dots"></span><span class="pg-time">${r.secs == null ? '—' : fmt(r.secs)}</span></div>`;
+    }).join('');
+    return `<div class="program fadein">
+      <div class="pg-head">The Vane House · Savannah</div>
+      <div class="pg-title">The Last Recital</div>
+      <div class="pg-sub">performed tonight by <b>Mat</b> &amp; <b>Emily</b></div>
+      <div class="pg-rule"></div>
+      <div class="pg-body">
+        <div class="pg-rows">${rows}</div>
+        <div class="pg-side">
+          <div class="pg-total"><span>Total performance</span><b>${fmt(pr.total)}</b></div>
+          <div class="pg-meta">${pr.hints} hint${pr.hints === 1 ? '' : 's'} (♪) · ${pr.skips} skip${pr.skips === 1 ? '' : 's'}${pr.rating.clean ? '<br><b>No hints at all — you sight-read the whole thing!</b>' : ''}</div>
+          <div class="pg-review"><div class="pg-stars">${stars}</div><div class="pg-rank">${pr.rating.title}</div><div class="pg-blurb">“${pr.rating.blurb}”</div><div class="pg-critic">— The Savannah Spectral Review</div></div>
+        </div>
+      </div>
+    </div>`;
   }
   function pianoHTML() {
     const keys = [60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72];
@@ -344,10 +372,25 @@
   let wakeLock = null;
   async function keepAwake() { try { if ('wakeLock' in navigator && !wakeLock && document.visibilityState === 'visible') { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch (e) {} }
   document.addEventListener('visibilitychange', keepAwake);
+  // Opening: the house sits dark until you wake it; then thunder, lightning, and the lights come on one by one
+  function lightsOff() { document.querySelectorAll('#scene .flick-win, #scene .flick, #scene .flame-shape').forEach((e) => e.classList.add('off')); }
+  function lightsOn() {
+    const els = [...document.querySelectorAll('#scene .off')];
+    const groups = []; els.forEach((e) => { const k = Math.round((e.getBBox ? (e.getBBox().x || 0) : 0) / 120); (groups[k] = groups[k] || []).push(e); });
+    groups.filter(Boolean).forEach((g, i) => setTimeout(() => g.forEach((e) => { e.classList.remove('off'); e.classList.add('ignite'); setTimeout(() => e.classList.remove('ignite'), 950); }), 250 + i * 420));
+  }
+  setTimeout(lightsOff, 30);
   $('#wakebtn').onclick = () => {
     keepAwake();
-    $('#wake').remove();
-    Sound.ensure(); Sound.ctx().resume().then(() => { applyMusic(); if (game.st.paused) applyPauseAudio(true); }, applyMusic);
+    Sound.ensure();
+    Sound.ctx().resume().then(() => {
+      Sound.thunder(0.55); Scenes.lightning();
+      setTimeout(() => { applyMusic(); if (game.st.paused) applyPauseAudio(true); }, 1400);
+    }, applyMusic);
+    $('#wake').classList.add('leaving');
+    setTimeout(() => document.body.classList.remove('asleep'), 1200);
+    setTimeout(lightsOn, 900);
+    setTimeout(() => { const w = $('#wake'); if (w) w.remove(); }, 2000);
   };
   render();
   // expose for automated tests only
